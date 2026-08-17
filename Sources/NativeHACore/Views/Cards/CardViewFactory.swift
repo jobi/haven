@@ -58,6 +58,13 @@ public struct CardViewFactory {
         case "markdown":
             MarkdownCardView(config: try? config.decode(MarkdownCardConfig.self))
             
+        case "media-control":
+            MediaControlCardView(
+                config: try? config.decode(MediaControlCardConfig.self),
+                entityStore: entityStore,
+                onMoreInfo: onMoreInfo
+            )
+            
         case "badge":
             BadgePillView(
                 config: config,

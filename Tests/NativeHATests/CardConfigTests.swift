@@ -102,4 +102,21 @@ final class CardConfigTests: XCTestCase {
         XCTAssertEqual(markdownConfig.title, "Notes")
         XCTAssertEqual(markdownConfig.content, "**Welcome** to *NativeHA*!")
     }
+    
+    func testMediaControlCardConfigDecoding() throws {
+        let json = """
+        {
+          "type": "media-control",
+          "entity": "media_player.living_room_tv",
+          "name": "Living Room TV"
+        }
+        """.data(using: .utf8)!
+        
+        let anyCard = try JSONDecoder().decode(AnyCardConfig.self, from: json)
+        let mediaConfig = try anyCard.decode(MediaControlCardConfig.self)
+        
+        XCTAssertEqual(mediaConfig.type, "media-control")
+        XCTAssertEqual(mediaConfig.entity, "media_player.living_room_tv")
+        XCTAssertEqual(mediaConfig.name, "Living Room TV")
+    }
 }

@@ -28,6 +28,7 @@ public final class AppState {
            let server = try? JSONDecoder().decode(ServerConfig.self, from: data) {
             self.activeServer = server
             self.isConfigured = true
+            self.entityStore.serverURL = server.url
         }
         
         setupWebSocketListener()
@@ -90,6 +91,7 @@ public final class AppState {
     public func setServerAndLogin(_ server: ServerConfig) {
         self.activeServer = server
         self.isConfigured = true
+        self.entityStore.serverURL = server.url
         
         if let data = try? JSONEncoder().encode(server) {
             UserDefaults.standard.set(data, forKey: userDefaultsServerKey)

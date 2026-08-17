@@ -157,6 +157,34 @@ public struct EntityRowConfig: Codable, Identifiable, Sendable, Hashable {
     }
 }
 
+// MARK: - Media Control Card Config
+public struct MediaControlCardConfig: Codable, Sendable, Hashable {
+    public let type: String
+    public let entity: String
+    public let name: String?
+    public let icon: String?
+    public let tapAction: ActionConfig?
+    
+    enum CodingKeys: String, CodingKey {
+        case type, entity, name, icon
+        case tapAction = "tap_action"
+    }
+    
+    public init(
+        type: String = "media-control",
+        entity: String,
+        name: String? = nil,
+        icon: String? = nil,
+        tapAction: ActionConfig? = nil
+    ) {
+        self.type = type
+        self.entity = entity
+        self.name = name
+        self.icon = icon
+        self.tapAction = tapAction
+    }
+}
+
 // MARK: - Sensor & Gauge Card Configs
 public struct SensorCardConfig: Codable, Sendable, Hashable {
     public let type: String

@@ -156,6 +156,65 @@ public final class EntityStore {
         )
     }
     
+    // MARK: - Media Player Actions
+    public func mediaPlayPause(entityId: String) async {
+        await callService(
+            domain: "media_player",
+            service: "media_play_pause",
+            target: ["entity_id": AnyCodable(entityId)]
+        )
+    }
+    
+    public func mediaNextTrack(entityId: String) async {
+        await callService(
+            domain: "media_player",
+            service: "media_next_track",
+            target: ["entity_id": AnyCodable(entityId)]
+        )
+    }
+    
+    public func mediaPreviousTrack(entityId: String) async {
+        await callService(
+            domain: "media_player",
+            service: "media_previous_track",
+            target: ["entity_id": AnyCodable(entityId)]
+        )
+    }
+    
+    public func setVolume(entityId: String, level: Double) async {
+        let clamped = min(1.0, max(0.0, level))
+        await callService(
+            domain: "media_player",
+            service: "volume_set",
+            target: ["entity_id": AnyCodable(entityId)],
+            serviceData: ["volume_level": AnyCodable(clamped)]
+        )
+    }
+    
+    public func setVolumeMute(entityId: String, isMuted: Bool) async {
+        await callService(
+            domain: "media_player",
+            service: "volume_mute",
+            target: ["entity_id": AnyCodable(entityId)],
+            serviceData: ["is_volume_muted": AnyCodable(isMuted)]
+        )
+    }
+    
+    public func selectSource(entityId: String, source: String) async {
+        await callService(
+            domain: "media_player",
+            service: "select_source",
+            target: ["entity_id": AnyCodable(entityId)],
+            serviceData: ["source": AnyCodable(source)]
+        )
+    }
+    
+    public var serverURL: URL? {
+        get { _serverURL }
+        set { _serverURL = newValue }
+    }
+    private var _serverURL: URL? = nil
+    
     public func callService(
         domain: String,
         service: String,
