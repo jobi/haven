@@ -20,7 +20,8 @@ def main():
     ]
     
     resource_files = [
-        'Sources/NativeHAApp/Assets.xcassets'
+        'Sources/NativeHAApp/Assets.xcassets',
+        'Sources/NativeHAApp/PrivacyInfo.xcprivacy'
     ]
     
     # IDs
