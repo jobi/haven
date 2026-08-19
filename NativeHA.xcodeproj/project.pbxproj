@@ -18,7 +18,7 @@
 		A629E1361C2793B49FC3E659 /* NativeHAApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/NativeHAApp/NativeHAApp.swift"; sourceTree = "<group>"; };
 		552CF13A1C9C15E69983C8E3 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/NativeHAApp/AppState.swift"; sourceTree = "<group>"; };
 		B81B3B18317C0A73E4AFBE48 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Sources/NativeHAApp/Assets.xcassets"; sourceTree = "<group>"; };
-		0E07E2E6C64FAB9EAC5CB9A3 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Sources/NativeHAApp/PrivacyInfo.xcprivacy"; sourceTree = "<group>"; };
+		0E07E2E6C64FAB9EAC5CB9A3 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "Sources/NativeHAApp/PrivacyInfo.xcprivacy"; sourceTree = "<group>"; };
 		07E2B197A072E9FBB810D46D /* Haven.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Haven.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -159,6 +159,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 5RN24MB5AH;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_DYNAMIC_NO_PIC = NO;

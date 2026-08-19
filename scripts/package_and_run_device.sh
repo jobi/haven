@@ -6,8 +6,10 @@ cd "$PROJECT_ROOT"
 
 APP_DIR="$PROJECT_ROOT/build/device/Haven.app"
 BIN_SRC="$PROJECT_ROOT/.build/arm64-apple-ios/debug/NativeHAApp"
-BUNDLE_ID="com.nativeha.haven"
+BUNDLE_ID="com.nativeha.client"
 DEVICE_ID="7DEE875C-F5B3-595E-84D3-4BAE345AB7BA"
+SIGNING_IDENTITY="Apple Development: johan+apple@bilien.org (5RN24MB5AH)"
+PROVISIONING_PROFILE="/Users/jobi/Library/Developer/Xcode/DerivedData/NativeHA-aiptjegnrxarumhcdbyjucdbbnno/Build/Products/Debug-iphoneos/Haven.app/embedded.mobileprovision"
 
 echo "==> Building Haven for iOS Device (arm64)..."
 swift build \
@@ -24,6 +26,11 @@ if [ -d "$PROJECT_ROOT/.build/arm64-apple-ios/debug/NativeHA_NativeHACore.bundle
     cp -R "$PROJECT_ROOT/.build/arm64-apple-ios/debug/NativeHA_NativeHACore.bundle" "$APP_DIR/"
 fi
 
+# Copy Privacy manifest
+if [ -f "Sources/NativeHAApp/PrivacyInfo.xcprivacy" ]; then
+    cp "Sources/NativeHAApp/PrivacyInfo.xcprivacy" "$APP_DIR/"
+fi
+
 # Compile Asset Catalog for AppIcon
 TMP_PLIST="$(mktemp /tmp/assets_info_XXXXXX.plist)"
 xcrun actool Sources/NativeHAApp/Assets.xcassets \
@@ -34,7 +41,7 @@ xcrun actool Sources/NativeHAApp/Assets.xcassets \
     --output-partial-info-plist "$TMP_PLIST" > /dev/null 2>&1 || true
 rm -f "$TMP_PLIST"
 
-cat << 'EOF' > "$APP_DIR/Info.plist"
+cat << EOF > "$APP_DIR/Info.plist"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -42,7 +49,7 @@ cat << 'EOF' > "$APP_DIR/Info.plist"
     <key>CFBundleExecutable</key>
     <string>Haven</string>
     <key>CFBundleIdentifier</key>
-    <string>com.nativeha.haven</string>
+    <string>${BUNDLE_ID}</string>
     <key>CFBundleName</key>
     <string>Haven</string>
     <key>CFBundleDisplayName</key>
@@ -108,5 +115,32 @@ cat << 'EOF' > "$APP_DIR/Info.plist"
 </plist>
 EOF
 
-echo "==> Signing app bundle with ad-hoc signature..."
-codesign --force --deep --sign - "$APP_DIR"
+if [ -f "$PROVISIONING_PROFILE" ]; then
+    echo "==> Embedding provisioning profile..."
+    cp "$PROVISIONING_PROFILE" "$APP_DIR/embedded.mobileprovision"
+    
+    # Extract entitlements
+    TMP_ENTITLEMENTS="$(mktemp /tmp/entitlements_XXXXXX.plist)"
+    security cms -D -i "$PROVISIONING_PROFILE" > "$TMP_ENTITLEMENTS"
+    /usr/libexec/PlistBuddy -x -c "Print :Entitlements" "$TMP_ENTITLEMENTS" > "$APP_DIR/Entitlements.plist" 2>/dev/null || true
+    rm -f "$TMP_ENTITLEMENTS"
+    
+    echo "==> Signing app bundle with developer certificate..."
+    if [ -f "$APP_DIR/Entitlements.plist" ]; then
+        codesign --force --timestamp=none --sign "$SIGNING_IDENTITY" --entitlements "$APP_DIR/Entitlements.plist" "$APP_DIR"
+        rm -f "$APP_DIR/Entitlements.plist"
+    else
+        codesign --force --timestamp=none --sign "$SIGNING_IDENTITY" "$APP_DIR"
+    fi
+else
+    echo "==> Signing app bundle with ad-hoc signature..."
+    codesign --force --deep --sign - "$APP_DIR"
+fi
+
+echo "==> Installing Haven on Johan's iPhone ($DEVICE_ID)..."
+xcrun devicectl device install app --device "$DEVICE_ID" "$APP_DIR"
+
+echo "==> Launching Haven ($BUNDLE_ID)..."
+xcrun devicectl device process launch --device "$DEVICE_ID" "$BUNDLE_ID"
+
+echo "==> Success! Haven with Multi-Server and Quick Actions is running on Johan's iPhone."

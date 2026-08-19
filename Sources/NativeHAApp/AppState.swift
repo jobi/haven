@@ -1,11 +1,14 @@
 import SwiftUI
 import Observation
 import NativeHACore
+#if os(iOS)
+import UIKit
+#endif
 
 @Observable
 @MainActor
 public final class AppState {
-    public var activeServer: ServerConfig?
+    public let serverStore: ServerStore
     public var connectionState: HAConnectionState = .disconnected
     public var isConfigured: Bool = false
     
@@ -14,24 +17,30 @@ public final class AppState {
     public let wsClient: HAWebSocketClient
     
     public var isShowingSettings: Bool = false
+    public var isShowingAddServerSheet: Bool = false
     
-    private let userDefaultsServerKey = "nativeha_active_server_v1"
-    
-    public init() {
+    public init(serverStore: ServerStore = .shared) {
+        self.serverStore = serverStore
         let client = HAWebSocketClient()
         self.wsClient = client
         self.entityStore = EntityStore(wsClient: client)
         self.dashboardRepository = DashboardRepository(wsClient: client)
         
-        // Restore saved server from UserDefaults if available
-        if let data = UserDefaults.standard.data(forKey: userDefaultsServerKey),
-           let server = try? JSONDecoder().decode(ServerConfig.self, from: data) {
-            self.activeServer = server
+        if let server = serverStore.activeServer {
             self.isConfigured = true
             self.entityStore.serverURL = server.url
         }
         
         setupWebSocketListener()
+        syncQuickActions()
+    }
+    
+    public var activeServer: ServerConfig? {
+        serverStore.activeServer
+    }
+    
+    public var servers: [ServerConfig] {
+        serverStore.servers
     }
     
     private func setupWebSocketListener() {
@@ -47,9 +56,7 @@ public final class AppState {
                 self.connectionState = state
                 
                 if state.isConnected {
-                    // Subscribe to entity updates
                     await self.subscribeToEntities()
-                    // Load dashboards
                     await self.dashboardRepository.loadDashboards()
                 }
             }
@@ -58,6 +65,9 @@ public final class AppState {
     
     public func connect() async {
         guard let server = activeServer else { return }
+        
+        // Reset stores for clean state
+        self.entityStore.serverURL = server.url
         
         await attachStateListener()
         
@@ -74,6 +84,8 @@ public final class AppState {
             await self.subscribeToEntities()
             await self.dashboardRepository.loadDashboards()
         }
+        
+        syncQuickActions()
     }
     
     private func subscribeToEntities() async {
@@ -88,35 +100,77 @@ public final class AppState {
         }
     }
     
-    public func setServerAndLogin(_ server: ServerConfig) {
-        self.activeServer = server
-        self.isConfigured = true
-        self.entityStore.serverURL = server.url
-        
-        if let data = try? JSONEncoder().encode(server) {
-            UserDefaults.standard.set(data, forKey: userDefaultsServerKey)
-        }
+    // MARK: - Server Switching & Management
+    
+    public func switchToServer(id: String) {
+        guard id != serverStore.activeServerId || !connectionState.isConnected else { return }
         
         Task {
+            await wsClient.disconnect()
+            serverStore.setActiveServer(id: id)
+            self.isConfigured = true
+            syncQuickActions()
             await connect()
         }
     }
     
-    public func logout() {
-        if let server = activeServer {
-            Task {
-                await HAAuthManager.shared.logout(serverId: server.id)
-            }
-        }
+    public func addServerAndLogin(_ server: ServerConfig) {
+        serverStore.addServer(server, makeActive: true)
+        self.isConfigured = true
+        self.isShowingAddServerSheet = false
+        syncQuickActions()
         
         Task {
             await wsClient.disconnect()
+            await connect()
         }
+    }
+    
+    public func removeServer(id: String) {
+        let isCurrent = (id == serverStore.activeServerId)
         
-        UserDefaults.standard.removeObject(forKey: userDefaultsServerKey)
-        self.activeServer = nil
-        self.isConfigured = false
-        self.connectionState = .disconnected
+        Task {
+            await HAAuthManager.shared.logout(serverId: id)
+            if isCurrent {
+                await wsClient.disconnect()
+            }
+            
+            serverStore.removeServer(id: id)
+            syncQuickActions()
+            
+            if serverStore.activeServer != nil {
+                self.isConfigured = true
+                await connect()
+            } else {
+                self.isConfigured = false
+                self.connectionState = .disconnected
+            }
+        }
+    }
+    
+    public func logoutCurrentServer() {
+        if let current = activeServer {
+            removeServer(id: current.id)
+        }
+    }
+    
+    #if os(iOS)
+    public func handleQuickAction(shortcutItem: UIApplicationShortcutItem) {
+        if QuickActionManager.shared.isAddServerAction(shortcutItem) {
+            isShowingAddServerSheet = true
+        } else if let serverId = QuickActionManager.shared.extractServerId(from: shortcutItem) {
+            switchToServer(id: serverId)
+        }
+    }
+    #endif
+    
+    public func syncQuickActions() {
+        #if os(iOS)
+        QuickActionManager.shared.syncQuickActions(
+            servers: serverStore.servers,
+            activeServerId: serverStore.activeServerId
+        )
+        #endif
     }
 }
 

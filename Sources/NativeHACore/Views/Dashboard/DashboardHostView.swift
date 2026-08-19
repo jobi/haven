@@ -9,6 +9,9 @@ public struct DashboardHostView: View {
     @Bindable var repository: DashboardRepository
     var entityStore: EntityStore
     var connectionState: HAConnectionState
+    var serverStore: ServerStore?
+    var onSwitchServer: ((String) -> Void)?
+    var onAddServer: (() -> Void)?
     var onOpenSettings: () -> Void
     var onReconnect: () -> Void
     
@@ -18,12 +21,18 @@ public struct DashboardHostView: View {
         repository: DashboardRepository,
         entityStore: EntityStore,
         connectionState: HAConnectionState,
+        serverStore: ServerStore? = nil,
+        onSwitchServer: ((String) -> Void)? = nil,
+        onAddServer: (() -> Void)? = nil,
         onOpenSettings: @escaping () -> Void,
         onReconnect: @escaping () -> Void
     ) {
         self.repository = repository
         self.entityStore = entityStore
         self.connectionState = connectionState
+        self.serverStore = serverStore
+        self.onSwitchServer = onSwitchServer
+        self.onAddServer = onAddServer
         self.onOpenSettings = onOpenSettings
         self.onReconnect = onReconnect
     }
@@ -77,7 +86,12 @@ public struct DashboardHostView: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    DashboardSelectorMenu(repository: repository)
+                    DashboardSelectorMenu(
+                        repository: repository,
+                        serverStore: serverStore,
+                        onSwitchServer: onSwitchServer,
+                        onAddServer: onAddServer
+                    )
                 }
                 #if os(iOS)
                 ToolbarItem(placement: .topBarTrailing) {
@@ -109,6 +123,34 @@ public struct DashboardHostView: View {
     private var splitViewLayout: some View {
         NavigationSplitView {
             List(selection: $repository.selectedViewId) {
+                if let store = serverStore, !store.servers.isEmpty {
+                    Section("Servers") {
+                        ForEach(store.servers) { server in
+                            Button {
+                                onSwitchServer?(server.id)
+                            } label: {
+                                HStack {
+                                    Image(systemName: "server.rack")
+                                        .foregroundStyle(server.id == store.activeServerId ? Color.haBlue : .secondary)
+                                    Text(server.name)
+                                        .fontWeight(server.id == store.activeServerId ? .bold : .regular)
+                                    Spacer()
+                                    if server.id == store.activeServerId {
+                                        Image(systemName: "checkmark")
+                                            .foregroundStyle(Color.haBlue)
+                                    }
+                                }
+                            }
+                        }
+                        
+                        Button {
+                            onAddServer?()
+                        } label: {
+                            Label("Add Server...", systemImage: "plus")
+                        }
+                    }
+                }
+                
                 Section("Dashboards") {
                     ForEach(repository.availableDashboards) { dashboard in
                         Button {

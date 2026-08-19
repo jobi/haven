@@ -63,13 +63,20 @@ def main():
         sources_phase_files.append(f'\t\t\t\t{build_file_id} /* {filename} in Sources */,')
         main_group_children.append(f'\t\t\t\t{file_ref_id} /* {filename} */,')
 
-    # Add Resource files (Assets.xcassets)
+    # Add Resource files (Assets.xcassets, PrivacyInfo.xcprivacy)
     for rf in resource_files:
         file_ref_id = generate_id('FILEREF_' + rf)
         build_file_id = generate_id('BUILDFILE_' + rf)
         filename = os.path.basename(rf)
         
-        pbx_file_refs.append(f'\t\t{file_ref_id} /* {filename} */ = {{isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "{rf}"; sourceTree = "<group>"; }};')
+        if rf.endswith('.xcassets'):
+            ftype = 'folder.assetcatalog'
+        elif rf.endswith('.xcprivacy'):
+            ftype = 'text.xml'
+        else:
+            ftype = 'file'
+        
+        pbx_file_refs.append(f'\t\t{file_ref_id} /* {filename} */ = {{isa = PBXFileReference; lastKnownFileType = {ftype}; path = "{rf}"; sourceTree = "<group>"; }};')
         pbx_build_files.append(f'\t\t{build_file_id} /* {filename} in Resources */ = {{isa = PBXBuildFile; fileRef = {file_ref_id} /* {filename} */; }};')
         resources_phase_files.append(f'\t\t\t\t{build_file_id} /* {filename} in Resources */,')
         main_group_children.append(f'\t\t\t\t{file_ref_id} /* {filename} */,')
@@ -228,6 +235,7 @@ def main():
 \t\t\t\tCLANG_ENABLE_MODULES = YES;
 \t\t\t\tCOPY_PHASE_STRIP = NO;
 \t\t\t\tDEBUG_INFORMATION_FORMAT = dwarf;
+\t\t\t\tDEVELOPMENT_TEAM = 5RN24MB5AH;
 \t\t\t\tENABLE_STRICT_OBJC_MSGSEND = YES;
 \t\t\t\tENABLE_TESTABILITY = YES;
 \t\t\t\tGCC_DYNAMIC_NO_PIC = NO;
@@ -428,7 +436,7 @@ def main():
     with open(os.path.join(schemes_dir, 'Haven.xcscheme'), 'w') as f:
         f.write(scheme_content)
 
-    print("==> Generated NativeHA.xcodeproj with Haven scheme & AppIcon asset catalog!")
+    print("==> Generated NativeHA.xcodeproj with Haven scheme, AppIcon, PrivacyInfo, and Team signing!")
 
 if __name__ == '__main__':
     main()
