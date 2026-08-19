@@ -29,6 +29,7 @@ public final class AppState {
         if let server = serverStore.activeServer {
             self.isConfigured = true
             self.entityStore.serverURL = server.url
+            self.dashboardRepository.serverId = server.id
         }
         
         setupWebSocketListener()
@@ -68,6 +69,7 @@ public final class AppState {
         
         // Reset stores for clean state
         self.entityStore.serverURL = server.url
+        self.dashboardRepository.serverId = server.id
         
         await attachStateListener()
         
@@ -108,6 +110,7 @@ public final class AppState {
         Task {
             await wsClient.disconnect()
             serverStore.setActiveServer(id: id)
+            self.dashboardRepository.serverId = id
             self.isConfigured = true
             syncQuickActions()
             await connect()

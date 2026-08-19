@@ -8,10 +8,18 @@ public final class DashboardRepository {
     public private(set) var currentDashboardConfig: LovelaceConfig?
     public private(set) var sectionViews: [LovelaceView] = []
     
+    public var serverId: String? {
+        didSet {
+            if oldValue != serverId {
+                restoreSelectionForCurrentServer()
+            }
+        }
+    }
+    
     public var selectedDashboardId: String? {
         didSet {
             if let id = selectedDashboardId {
-                UserDefaults.standard.set(id, forKey: lastSelectedDashboardKey)
+                userDefaults.set(id, forKey: lastDashboardKey(for: serverId))
             }
         }
     }
@@ -19,7 +27,7 @@ public final class DashboardRepository {
     public var selectedViewId: String? {
         didSet {
             if let id = selectedViewId {
-                UserDefaults.standard.set(id, forKey: lastSelectedViewKey)
+                userDefaults.set(id, forKey: lastViewKey(for: serverId))
             }
         }
     }
@@ -28,17 +36,44 @@ public final class DashboardRepository {
     public var errorMessage: String?
     
     private weak var wsClient: HAWebSocketClient?
-    private let lastSelectedDashboardKey = "ha_last_selected_dashboard_id"
-    private let lastSelectedViewKey = "ha_last_selected_view_id"
+    private let userDefaults: UserDefaults
     
-    public init(wsClient: HAWebSocketClient? = nil) {
+    private let legacyDashboardKey = "ha_last_selected_dashboard_id"
+    private let legacyViewKey = "ha_last_selected_view_id"
+    
+    public init(wsClient: HAWebSocketClient? = nil, userDefaults: UserDefaults = .standard, serverId: String? = nil) {
         self.wsClient = wsClient
-        self.selectedDashboardId = UserDefaults.standard.string(forKey: lastSelectedDashboardKey)
-        self.selectedViewId = UserDefaults.standard.string(forKey: lastSelectedViewKey)
+        self.userDefaults = userDefaults
+        self.serverId = serverId
+        restoreSelectionForCurrentServer()
     }
     
     public func setWebSocketClient(_ client: HAWebSocketClient) {
         self.wsClient = client
+    }
+    
+    private func lastDashboardKey(for serverId: String?) -> String {
+        guard let serverId = serverId, !serverId.isEmpty else {
+            return legacyDashboardKey
+        }
+        return "haven_last_dashboard_\(serverId)"
+    }
+    
+    private func lastViewKey(for serverId: String?) -> String {
+        guard let serverId = serverId, !serverId.isEmpty else {
+            return legacyViewKey
+        }
+        return "haven_last_view_\(serverId)"
+    }
+    
+    public func restoreSelectionForCurrentServer() {
+        let savedDash = userDefaults.string(forKey: lastDashboardKey(for: serverId))
+            ?? userDefaults.string(forKey: legacyDashboardKey)
+        let savedView = userDefaults.string(forKey: lastViewKey(for: serverId))
+            ?? userDefaults.string(forKey: legacyViewKey)
+        
+        self.selectedDashboardId = savedDash
+        self.selectedViewId = savedView
     }
     
     // MARK: - Fetch Dashboards
@@ -51,7 +86,7 @@ public final class DashboardRepository {
             // 1. Fetch custom dashboards list
             var dashboards: [LovelaceDashboardSummary] = []
             
-            // Add default main dashboard (id: "lovelace", url_path: nil)
+            // Add default main dashboard (id: "default", url_path: nil)
             dashboards.append(LovelaceDashboardSummary(
                 id: "default",
                 urlPath: nil,
@@ -73,8 +108,10 @@ public final class DashboardRepository {
             
             self.availableDashboards = dashboards
             
-            // Restore saved dashboard if present, otherwise default to first/saved
-            let savedId = UserDefaults.standard.string(forKey: lastSelectedDashboardKey)
+            // Restore saved dashboard for this server if present, otherwise default to first/saved
+            let savedId = userDefaults.string(forKey: lastDashboardKey(for: serverId))
+                ?? userDefaults.string(forKey: legacyDashboardKey)
+            
             let targetId: String
             if let saved = savedId, dashboards.contains(where: { $0.id == saved }) {
                 targetId = saved
@@ -97,7 +134,7 @@ public final class DashboardRepository {
     public func selectDashboard(id: String) async {
         guard let client = wsClient else { return }
         self.selectedDashboardId = id
-        UserDefaults.standard.set(id, forKey: lastSelectedDashboardKey)
+        userDefaults.set(id, forKey: lastDashboardKey(for: serverId))
         
         self.isLoading = true
         self.errorMessage = nil
@@ -120,8 +157,10 @@ public final class DashboardRepository {
                 let filteredSections = config.views.filter { $0.isSectionsType }
                 self.sectionViews = filteredSections
                 
-                // Restore saved view if valid, otherwise select first
-                let savedViewId = UserDefaults.standard.string(forKey: lastSelectedViewKey)
+                // Restore saved view for this server if valid, otherwise select first
+                let savedViewId = userDefaults.string(forKey: lastViewKey(for: serverId))
+                    ?? userDefaults.string(forKey: legacyViewKey)
+                
                 if let saved = savedViewId, filteredSections.contains(where: { $0.id == saved }) {
                     self.selectedViewId = saved
                 } else if let first = filteredSections.first {
