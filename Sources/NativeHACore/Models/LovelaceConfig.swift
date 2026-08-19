@@ -188,13 +188,46 @@ public struct AnyCardConfig: Codable, Identifiable, Sendable, Hashable {
         rawData["visibility"]?.arrayValue
     }
     
+    public var tapAction: ActionConfig? {
+        if let tap = rawData["tap_action"] {
+            let encoder = JSONEncoder()
+            if let encoded = try? encoder.encode(tap),
+               let action = try? JSONDecoder().decode(ActionConfig.self, from: encoded) {
+                return action
+            }
+        }
+        return nil
+    }
+    
+    public var holdAction: ActionConfig? {
+        if let hold = rawData["hold_action"] {
+            let encoder = JSONEncoder()
+            if let encoded = try? encoder.encode(hold),
+               let action = try? JSONDecoder().decode(ActionConfig.self, from: encoded) {
+                return action
+            }
+        }
+        return nil
+    }
+    
+    public var doubleTapAction: ActionConfig? {
+        if let doubleTap = rawData["double_tap_action"] {
+            let encoder = JSONEncoder()
+            if let encoded = try? encoder.encode(doubleTap),
+               let action = try? JSONDecoder().decode(ActionConfig.self, from: encoded) {
+                return action
+            }
+        }
+        return nil
+    }
+    
     public var gridOptions: CardGridOptions? {
         guard let gridData = rawData["grid_options"] else { return nil }
         let encoder = JSONEncoder()
         if let encoded = try? encoder.encode(gridData),
            let options = try? JSONDecoder().decode(CardGridOptions.self, from: encoded) {
-            return options
-        }
+                return options
+            }
         return nil
     }
     

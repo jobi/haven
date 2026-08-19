@@ -29,11 +29,11 @@ public struct SensorCardView: View {
             VStack(alignment: .leading, spacing: 8) {
                 // Top Header: Icon + Name
                 HStack(spacing: 8) {
-                    Image(systemName: IconMapper.sfSymbol(
-                        for: config?.icon ?? entity?.icon,
+                    HAIconView(
+                        icon: config?.icon ?? entity?.icon,
                         domain: entity?.domain
-                    ))
-                    .font(.subheadline)
+                    )
+                    .frame(width: 16, height: 16)
                     .foregroundStyle(.secondary)
                     
                     Text(config?.name ?? entity?.friendlyName ?? "Sensor")

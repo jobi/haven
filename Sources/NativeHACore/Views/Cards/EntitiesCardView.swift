@@ -21,8 +21,8 @@ public struct EntitiesCardView: View {
             if let title = config?.title, !title.isEmpty {
                 HStack(spacing: 8) {
                     if let icon = config?.icon {
-                        Image(systemName: IconMapper.sfSymbol(for: icon))
-                            .font(.headline)
+                        HAIconView(icon: icon)
+                            .frame(width: 18, height: 18)
                             .foregroundStyle(.secondary)
                     }
                     Text(title)
@@ -43,7 +43,7 @@ public struct EntitiesCardView: View {
                         
                         if index < rows.count - 1 {
                             Divider()
-                                .padding(.leading, 46)
+                                .padding(.leading, 50)
                         }
                     }
                 }
@@ -65,14 +65,13 @@ public struct EntitiesCardView: View {
         if let entityId = row.entity, let entity = entityStore.entity(for: entityId) {
             HStack(spacing: 12) {
                 // Icon
-                Image(systemName: IconMapper.sfSymbol(
-                    for: row.icon ?? entity.icon,
+                HAIconView(
+                    icon: row.icon ?? entity.icon,
                     domain: entity.domain,
                     isActive: entity.isOn
-                ))
-                .font(.system(size: 18, weight: .medium))
+                )
+                .frame(width: 20, height: 20)
                 .foregroundStyle(iconColor(entity: entity))
-                .frame(width: 24)
                 
                 // Name
                 Text(row.name ?? entity.friendlyName)
@@ -96,6 +95,42 @@ public struct EntitiesCardView: View {
                         }
                     ))
                     .labelsHidden()
+                } else if let options = entity.attributes["options"]?.arrayValue?.compactMap(\.stringValue) ?? entity.attributes["activity_list"]?.arrayValue?.compactMap(\.stringValue), !options.isEmpty {
+                    let current = (entity.domain == "remote" ? entity.attributes["current_activity"]?.stringValue : nil) ?? entity.state
+                    Menu {
+                        ForEach(options, id: \.self) { opt in
+                            Button {
+                                #if os(iOS)
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                #endif
+                                Task {
+                                    if entity.domain == "remote" {
+                                        await entityStore.selectRemoteActivity(entityId: entityId, activity: opt)
+                                    } else {
+                                        await entityStore.selectOption(entityId: entityId, option: opt)
+                                    }
+                                }
+                            } label: {
+                                HStack {
+                                    Text(opt)
+                                    if opt == current { Image(systemName: "checkmark") }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(current)
+                                .font(.subheadline)
+                                .foregroundStyle(.primary)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.primary.opacity(0.06))
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    }
                 } else {
                     Text(entity.displayState)
                         .font(.subheadline)

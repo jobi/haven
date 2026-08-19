@@ -1,5 +1,10 @@
 import SwiftUI
 
+public struct EntityMoreInfoItem: Identifiable, Sendable {
+    public let id: String
+    public init(id: String) { self.id = id }
+}
+
 public struct DashboardHostView: View {
     @Bindable var repository: DashboardRepository
     var entityStore: EntityStore
@@ -7,8 +12,7 @@ public struct DashboardHostView: View {
     var onOpenSettings: () -> Void
     var onReconnect: () -> Void
     
-    @State private var selectedEntityIdForMoreInfo: String? = nil
-    @State private var isShowingMoreInfo: Bool = false
+    @State private var presentedMoreInfoItem: EntityMoreInfoItem? = nil
     
     public init(
         repository: DashboardRepository,
@@ -58,8 +62,7 @@ public struct DashboardHostView: View {
                         viewConfig: currentView,
                         entityStore: entityStore,
                         onMoreInfo: { entityId in
-                            selectedEntityIdForMoreInfo = entityId
-                            isShowingMoreInfo = true
+                            presentedMoreInfoItem = EntityMoreInfoItem(id: entityId)
                         },
                         onRefresh: {
                             await repository.loadDashboards()
@@ -96,11 +99,8 @@ public struct DashboardHostView: View {
                 }
                 #endif
             }
-            .sheet(isPresented: $isShowingMoreInfo) {
-                if let entityId = selectedEntityIdForMoreInfo,
-                   let entity = entityStore.entity(for: entityId) {
-                    EntityMoreInfoSheet(entity: entity, entityStore: entityStore)
-                }
+            .sheet(item: $presentedMoreInfoItem) { item in
+                EntityMoreInfoSheet(entityId: item.id, entityStore: entityStore)
             }
         }
     }
@@ -132,7 +132,8 @@ public struct DashboardHostView: View {
                             NavigationLink(value: view.id) {
                                 HStack {
                                     if let icon = view.icon {
-                                        Image(systemName: IconMapper.sfSymbol(for: icon))
+                                        HAIconView(icon: icon)
+                                            .frame(width: 16, height: 16)
                                     }
                                     Text(view.displayName)
                                 }
@@ -142,7 +143,7 @@ public struct DashboardHostView: View {
                 }
             }
             .listStyle(.sidebar)
-            .navigationTitle("Home Assistant")
+            .navigationTitle("Haven")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: onOpenSettings) {
@@ -161,8 +162,7 @@ public struct DashboardHostView: View {
                         viewConfig: currentView,
                         entityStore: entityStore,
                         onMoreInfo: { entityId in
-                            selectedEntityIdForMoreInfo = entityId
-                            isShowingMoreInfo = true
+                            presentedMoreInfoItem = EntityMoreInfoItem(id: entityId)
                         },
                         onRefresh: {
                             await repository.loadDashboards()
@@ -172,11 +172,8 @@ public struct DashboardHostView: View {
                     emptyStateView
                 }
             }
-            .sheet(isPresented: $isShowingMoreInfo) {
-                if let entityId = selectedEntityIdForMoreInfo,
-                   let entity = entityStore.entity(for: entityId) {
-                    EntityMoreInfoSheet(entity: entity, entityStore: entityStore)
-                }
+            .sheet(item: $presentedMoreInfoItem) { item in
+                EntityMoreInfoSheet(entityId: item.id, entityStore: entityStore)
             }
         }
     }
@@ -192,8 +189,8 @@ public struct DashboardHostView: View {
                     } label: {
                         HStack(spacing: 6) {
                             if let icon = view.icon {
-                                Image(systemName: IconMapper.sfSymbol(for: icon, isActive: isSelected))
-                                    .font(.caption)
+                                HAIconView(icon: icon, isActive: isSelected)
+                                    .frame(width: 14, height: 14)
                             }
                             Text(view.displayName)
                                 .font(.subheadline.weight(isSelected ? .semibold : .regular))

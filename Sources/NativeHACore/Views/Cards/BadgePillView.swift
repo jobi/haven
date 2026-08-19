@@ -26,18 +26,20 @@ public struct BadgePillView: View {
     public var body: some View {
         if let entityId = entityId, let entity = entityStore.entity(for: entityId) {
             Button {
-                #if os(iOS)
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                #endif
-                onSelect?(entityId)
+                ActionHandler.handle(
+                    actionConfig: config.tapAction,
+                    defaultEntityId: entityId,
+                    entityStore: entityStore,
+                    onMoreInfo: onSelect
+                )
             } label: {
                 HStack(spacing: 5) {
-                    Image(systemName: IconMapper.sfSymbol(
-                        for: customIcon ?? entity.icon,
+                    HAIconView(
+                        icon: customIcon ?? entity.icon,
                         domain: entity.domain,
                         isActive: entity.isOn
-                    ))
-                    .font(.system(size: 11, weight: .semibold))
+                    )
+                    .frame(width: 12, height: 12)
                     .foregroundStyle(iconColor(entity: entity))
                     
                     Text(entity.displayState)
@@ -57,6 +59,23 @@ public struct BadgePillView: View {
                 )
             }
             .buttonStyle(.plain)
+            .contextMenu {
+                Button {
+                    onSelect?(entityId)
+                } label: {
+                    Label("More Info", systemImage: "info.circle")
+                }
+                
+                if entity.isToggleable {
+                    Button {
+                        Task {
+                            await entityStore.toggle(entityId: entityId)
+                        }
+                    } label: {
+                        Label(entity.isOn ? "Turn Off" : "Turn On", systemImage: "power")
+                    }
+                }
+            }
             .fixedSize()
         }
     }

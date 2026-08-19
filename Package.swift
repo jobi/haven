@@ -23,12 +23,19 @@ let package = Package(
         .target(
             name: "NativeHACore",
             dependencies: [],
-            path: "Sources/NativeHACore"
+            path: "Sources/NativeHACore",
+            resources: [
+                .process("Resources")
+            ]
         ),
         .executableTarget(
             name: "NativeHAApp",
             dependencies: ["NativeHACore"],
-            path: "Sources/NativeHAApp"
+            path: "Sources/NativeHAApp",
+            exclude: ["Info.plist"],
+            resources: [
+                .process("Assets.xcassets")
+            ]
         ),
         .testTarget(
             name: "NativeHATests",

@@ -2,15 +2,39 @@ import Foundation
 
 // MARK: - Tap Actions
 public struct ActionConfig: Codable, Sendable, Hashable {
-    public let action: String?             // "toggle", "more-info", "call-service", "navigate", "none"
+    public let action: String?             // "toggle", "more-info", "call-service", "perform-action", "navigate", "url", "none", "default"
     public let service: String?            // e.g. "light.turn_on"
+    public let performAction: String?      // Home Assistant 2024+ synonym
     public let target: [String: AnyCodable]?
     public let data: [String: AnyCodable]?
+    public let serviceData: [String: AnyCodable]?
     public let navigationPath: String?
     public let urlPath: String?
     
+    public init(
+        action: String? = nil,
+        service: String? = nil,
+        performAction: String? = nil,
+        target: [String: AnyCodable]? = nil,
+        data: [String: AnyCodable]? = nil,
+        serviceData: [String: AnyCodable]? = nil,
+        navigationPath: String? = nil,
+        urlPath: String? = nil
+    ) {
+        self.action = action
+        self.service = service
+        self.performAction = performAction
+        self.target = target
+        self.data = data
+        self.serviceData = serviceData
+        self.navigationPath = navigationPath
+        self.urlPath = urlPath
+    }
+    
     enum CodingKeys: String, CodingKey {
         case action, service, target, data
+        case performAction = "perform_action"
+        case serviceData = "service_data"
         case navigationPath = "navigation_path"
         case urlPath = "url_path"
     }
@@ -83,8 +107,22 @@ public struct TileCardConfig: Codable, Sendable, Hashable {
 
 // MARK: - Tile Feature Config
 public struct TileFeatureConfig: Codable, Sendable, Hashable {
-    public let type: String                // "light-brightness", "fan-speed", "cover-open-close", "target-temperature"
-    public let style: String?
+    public let type: String                // "light-brightness", "light-color-temp", "fan-speed", "cover-open-close", "cover-tilt", "cover-position", "target-temperature", "alarm-modes", "vacuum-commands"
+    public let style: String?              // "slider", "icons"
+    public let modes: [String]?
+    public let commands: [String]?
+    
+    public init(
+        type: String,
+        style: String? = nil,
+        modes: [String]? = nil,
+        commands: [String]? = nil
+    ) {
+        self.type = type
+        self.style = style
+        self.modes = modes
+        self.commands = commands
+    }
 }
 
 // MARK: - Button Card Config

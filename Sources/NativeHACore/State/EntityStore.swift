@@ -209,6 +209,151 @@ public final class EntityStore {
         )
     }
     
+    // MARK: - Light Actions
+    public func setLightRGB(entityId: String, r: Int, g: Int, b: Int) async {
+        await callService(
+            domain: "light",
+            service: "turn_on",
+            target: ["entity_id": AnyCodable(entityId)],
+            serviceData: ["rgb_color": AnyCodable([AnyCodable(r), AnyCodable(g), AnyCodable(b)])]
+        )
+    }
+    
+    public func setLightColorTemp(entityId: String, kelvin: Int) async {
+        await callService(
+            domain: "light",
+            service: "turn_on",
+            target: ["entity_id": AnyCodable(entityId)],
+            serviceData: ["color_temp_kelvin": AnyCodable(kelvin)]
+        )
+    }
+    
+    public func setLightEffect(entityId: String, effect: String) async {
+        await callService(
+            domain: "light",
+            service: "turn_on",
+            target: ["entity_id": AnyCodable(entityId)],
+            serviceData: ["effect": AnyCodable(effect)]
+        )
+    }
+    
+    // MARK: - Climate Actions
+    public func setTargetTemperature(entityId: String, temperature: Double) async {
+        await callService(
+            domain: "climate",
+            service: "set_temperature",
+            target: ["entity_id": AnyCodable(entityId)],
+            serviceData: ["temperature": AnyCodable(temperature)]
+        )
+    }
+    
+    public func setHVACMode(entityId: String, mode: String) async {
+        await callService(
+            domain: "climate",
+            service: "set_hvac_mode",
+            target: ["entity_id": AnyCodable(entityId)],
+            serviceData: ["hvac_mode": AnyCodable(mode)]
+        )
+    }
+    
+    // MARK: - Cover Actions
+    public func openCover(entityId: String) async {
+        await callService(
+            domain: "cover",
+            service: "open_cover",
+            target: ["entity_id": AnyCodable(entityId)]
+        )
+    }
+    
+    public func closeCover(entityId: String) async {
+        await callService(
+            domain: "cover",
+            service: "close_cover",
+            target: ["entity_id": AnyCodable(entityId)]
+        )
+    }
+    
+    public func stopCover(entityId: String) async {
+        await callService(
+            domain: "cover",
+            service: "stop_cover",
+            target: ["entity_id": AnyCodable(entityId)]
+        )
+    }
+    
+    public func setCoverPosition(entityId: String, position: Int) async {
+        await callService(
+            domain: "cover",
+            service: "set_cover_position",
+            target: ["entity_id": AnyCodable(entityId)],
+            serviceData: ["position": AnyCodable(position)]
+        )
+    }
+    
+    // MARK: - Lock Actions
+    public func setLock(entityId: String, lock: Bool) async {
+        await callService(
+            domain: "lock",
+            service: lock ? "lock" : "unlock",
+            target: ["entity_id": AnyCodable(entityId)]
+        )
+    }
+    
+    // MARK: - Automation & Scene Actions
+    public func triggerAutomation(entityId: String) async {
+        await callService(
+            domain: "automation",
+            service: "trigger",
+            target: ["entity_id": AnyCodable(entityId)]
+        )
+    }
+    
+    public func turnOn(entityId: String) async {
+        let domain = entityId.components(separatedBy: ".").first ?? "homeassistant"
+        await callService(
+            domain: domain,
+            service: "turn_on",
+            target: ["entity_id": AnyCodable(entityId)]
+        )
+    }
+    
+    public func turnOff(entityId: String) async {
+        let domain = entityId.components(separatedBy: ".").first ?? "homeassistant"
+        await callService(
+            domain: domain,
+            service: "turn_off",
+            target: ["entity_id": AnyCodable(entityId)]
+        )
+    }
+    
+    // MARK: - Select & Remote Actions
+    public func selectOption(entityId: String, option: String) async {
+        let domain = entityId.components(separatedBy: ".").first ?? "select"
+        await callService(
+            domain: domain,
+            service: "select_option",
+            target: ["entity_id": AnyCodable(entityId)],
+            serviceData: ["option": AnyCodable(option)]
+        )
+    }
+    
+    public func selectRemoteActivity(entityId: String, activity: String) async {
+        if activity.lowercased() == "poweroff" || activity.lowercased() == "power_off" {
+            await callService(
+                domain: "remote",
+                service: "turn_off",
+                target: ["entity_id": AnyCodable(entityId)]
+            )
+        } else {
+            await callService(
+                domain: "remote",
+                service: "turn_on",
+                target: ["entity_id": AnyCodable(entityId)],
+                serviceData: ["activity": AnyCodable(activity)]
+            )
+        }
+    }
+    
     public var serverURL: URL? {
         get { _serverURL }
         set { _serverURL = newValue }

@@ -26,8 +26,8 @@ public struct SectionContainerView: View {
             if !firstCardIsHeading, let title = section.title, !title.isEmpty {
                 HStack(spacing: 8) {
                     if let icon = section.icon {
-                        Image(systemName: IconMapper.sfSymbol(for: icon))
-                            .font(.system(size: 18, weight: .semibold))
+                        HAIconView(icon: icon)
+                            .frame(width: 18, height: 18)
                             .foregroundStyle(.primary)
                     }
                     

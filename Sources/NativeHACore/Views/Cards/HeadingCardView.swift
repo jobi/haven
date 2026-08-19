@@ -24,8 +24,8 @@ public struct HeadingCardView: View {
     public var body: some View {
         HStack(alignment: .center, spacing: 8) {
             if let icon = resolvedIcon {
-                Image(systemName: IconMapper.sfSymbol(for: icon))
-                    .font(.system(size: 18, weight: .semibold))
+                HAIconView(icon: icon)
+                    .frame(width: 20, height: 20)
                     .foregroundStyle(.primary)
             }
             

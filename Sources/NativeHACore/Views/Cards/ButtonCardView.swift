@@ -34,14 +34,13 @@ public struct ButtonCardView: View {
         } label: {
             VStack(spacing: 8) {
                 if config?.showIcon != false {
-                    Image(systemName: IconMapper.sfSymbol(
-                        for: config?.icon ?? entity?.icon,
+                    HAIconView(
+                        icon: config?.icon ?? entity?.icon,
                         domain: entity?.domain,
                         isActive: isActive
-                    ))
-                    .font(.system(size: 28, weight: .semibold))
+                    )
+                    .frame(width: 32, height: 32)
                     .foregroundStyle(iconColor)
-                    .frame(height: 36)
                 }
                 
                 if config?.showName != false {
@@ -88,17 +87,11 @@ public struct ButtonCardView: View {
     }
     
     private func handleTap() {
-        #if os(iOS)
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        #endif
-        
-        let action = config?.tapAction?.action ?? "toggle"
-        if action == "more-info", let entityId = config?.entity {
-            onMoreInfo?(entityId)
-        } else if let entityId = config?.entity {
-            Task {
-                await entityStore.toggle(entityId: entityId)
-            }
-        }
+        ActionHandler.handle(
+            actionConfig: config?.tapAction,
+            defaultEntityId: config?.entity,
+            entityStore: entityStore,
+            onMoreInfo: onMoreInfo
+        )
     }
 }
