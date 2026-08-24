@@ -6,7 +6,7 @@ cd "$PROJECT_ROOT"
 
 APP_DIR="$PROJECT_ROOT/build/device/Haven.app"
 BIN_SRC="$PROJECT_ROOT/.build/arm64-apple-ios/debug/NativeHAApp"
-BUNDLE_ID="com.nativeha.client"
+BUNDLE_ID="org.bilien.haven"
 DEVICE_ID="7DEE875C-F5B3-595E-84D3-4BAE345AB7BA"
 SIGNING_IDENTITY="Apple Development: johan+apple@bilien.org (5RN24MB5AH)"
 PROVISIONING_PROFILE="/Users/jobi/Library/Developer/Xcode/DerivedData/NativeHA-aiptjegnrxarumhcdbyjucdbbnno/Build/Products/Debug-iphoneos/Haven.app/embedded.mobileprovision"

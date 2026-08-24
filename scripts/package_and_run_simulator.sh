@@ -6,7 +6,7 @@ cd "$PROJECT_ROOT"
 
 APP_DIR="build/Haven.app"
 BIN_SRC=".build/arm64-apple-ios-simulator/debug/NativeHAApp"
-BUNDLE_ID="com.nativeha.haven"
+BUNDLE_ID="org.bilien.haven"
 
 echo "==> Creating .app bundle structure..."
 rm -rf "$APP_DIR"
@@ -35,7 +35,7 @@ cat << 'EOF' > "$APP_DIR/Info.plist"
     <key>CFBundleExecutable</key>
     <string>Haven</string>
     <key>CFBundleIdentifier</key>
-    <string>com.nativeha.haven</string>
+    <string>org.bilien.haven</string>
     <key>CFBundleName</key>
     <string>Haven</string>
     <key>CFBundleDisplayName</key>
