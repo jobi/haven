@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 public actor HAWebSocketClient {
     private var webSocketTask: URLSessionWebSocketTask?
@@ -10,6 +11,7 @@ public actor HAWebSocketClient {
     private var messageSequence: Int = 1
     private var pendingContinuations: [Int: CheckedContinuation<AnyCodable?, Error>] = [:]
     private var subscriptionHandlers: [Int: @Sendable (AnyCodable) async -> Void] = [:]
+    private var stringSubscriptionHandlers: [String: @Sendable (AnyCodable) async -> Void] = [:]
     
     private var isIntentionalDisconnect: Bool = false
     private var reconnectAttempt: Int = 0
@@ -140,9 +142,18 @@ public actor HAWebSocketClient {
             return
         }
         
+        let rawDict = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
         let decoder = JSONDecoder()
         guard let incoming = try? decoder.decode(HAIncomingMessage.self, from: data) else {
+            if let raw = rawDict, let id = raw["id"] as? Int, let handler = subscriptionHandlers[id] {
+                await handler(AnyCodable(raw))
+            }
             return
+        }
+        
+        let logger = Logger(subsystem: "com.nativeha.client", category: "Camera")
+        if let id = incoming.id, subscriptionHandlers[id] != nil {
+            logger.notice("Received WS message on subscription id \(id): type=\(incoming.type), raw=\(String(describing: rawDict))")
         }
         
         switch incoming.type {
@@ -160,18 +171,38 @@ public actor HAWebSocketClient {
             disconnect()
             
         case "result":
-            if let id = incoming.id, let continuation = pendingContinuations.removeValue(forKey: id) {
-                if incoming.success == true {
-                    continuation.resume(returning: incoming.result)
-                } else {
-                    let errMsg = incoming.error?.message ?? "Command failed"
-                    continuation.resume(throwing: HAClientError.commandFailed(message: errMsg))
+            if let id = incoming.id {
+                if let handler = subscriptionHandlers[id] {
+                    let eventData = incoming.result ?? AnyCodable(rawDict)
+                    await handler(eventData)
+                    
+                    if let subId = incoming.result?.dictionaryValue?["subscription_id"]?.stringValue {
+                        stringSubscriptionHandlers[subId] = handler
+                    } else if let resDict = rawDict?["result"] as? [String: Any], let subId = resDict["subscription_id"] as? String {
+                        stringSubscriptionHandlers[subId] = handler
+                    }
+                }
+                
+                if let continuation = pendingContinuations.removeValue(forKey: id) {
+                    if incoming.success == true {
+                        continuation.resume(returning: incoming.result)
+                    } else {
+                        let errMsg = incoming.error?.message ?? "Command failed"
+                        continuation.resume(throwing: HAClientError.commandFailed(message: errMsg))
+                    }
                 }
             }
             
         case "event":
-            if let id = incoming.id, let handler = subscriptionHandlers[id], let event = incoming.event {
-                await handler(event)
+            if let rawId = incoming.rawId {
+                if let handler = stringSubscriptionHandlers[rawId] {
+                    let eventData = incoming.event ?? AnyCodable(rawDict)
+                    await handler(eventData)
+                }
+                if let intId = incoming.id, let handler = subscriptionHandlers[intId] {
+                    let eventData = incoming.event ?? AnyCodable(rawDict)
+                    await handler(eventData)
+                }
             }
             
         case "pong":
@@ -179,6 +210,16 @@ public actor HAWebSocketClient {
             break
             
         default:
+            if let rawId = incoming.rawId {
+                if let handler = stringSubscriptionHandlers[rawId] {
+                    let eventData = incoming.event ?? AnyCodable(rawDict)
+                    await handler(eventData)
+                }
+                if let intId = incoming.id, let handler = subscriptionHandlers[intId] {
+                    let eventData = incoming.event ?? AnyCodable(rawDict)
+                    await handler(eventData)
+                }
+            }
             break
         }
     }
@@ -222,19 +263,8 @@ public actor HAWebSocketClient {
         }
     }
     
-    private func handleConnectionDrop(error: Error) async {
+    private func handleConnectionDrop(error: Error?) async {
         guard !isIntentionalDisconnect else { return }
-        
-        let nsError = error as NSError
-        if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled {
-            return
-        }
-        if Task.isCancelled {
-            return
-        }
-        
-        heartbeatTask?.cancel()
-        heartbeatTask = nil
         
         reconnectAttempt += 1
         let delay = min(30.0, pow(2.0, Double(reconnectAttempt)))
@@ -251,6 +281,10 @@ public actor HAWebSocketClient {
         type: String,
         domain: String? = nil,
         service: String? = nil,
+        entityId: String? = nil,
+        offer: String? = nil,
+        path: String? = nil,
+        expires: Int? = nil,
         target: [String: AnyCodable]? = nil,
         serviceData: [String: AnyCodable]? = nil,
         urlPath: String? = nil
@@ -265,6 +299,10 @@ public actor HAWebSocketClient {
             type: type,
             domain: domain,
             service: service,
+            entityId: entityId,
+            offer: offer,
+            path: path,
+            expires: expires,
             target: target,
             serviceData: serviceData,
             urlPath: urlPath
@@ -286,6 +324,123 @@ public actor HAWebSocketClient {
                 }
             }
         }
+    }
+    
+    // MARK: - WebRTC Stream Offer Session
+    public func sendWebRTCOfferSession(entityId: String, offer: String) async throws -> String {
+        guard state.isConnected else {
+            throw HAClientError.notConnected
+        }
+        
+        let id = nextSequenceId()
+        let cmd = HAOutgoingCommand(
+            id: id,
+            type: "camera/webrtc/offer",
+            entityId: entityId,
+            offer: offer
+        )
+        
+        let data = try JSONEncoder().encode(cmd)
+        guard let jsonString = String(data: data, encoding: .utf8) else {
+            throw HAClientError.serializationFailed
+        }
+        
+        @Sendable func extractSDP(from any: AnyCodable?) -> String? {
+            guard let any = any else { return nil }
+            if let str = any.stringValue, str.hasPrefix("v=0") || str.contains("m=video") {
+                return str
+            }
+            if let dict = any.dictionaryValue {
+                if let answer = dict["answer"]?.stringValue, !answer.isEmpty {
+                    return answer
+                }
+                if let sdp = dict["sdp"]?.stringValue, !sdp.isEmpty {
+                    return sdp
+                }
+                if let eventObj = dict["event"], let nested = extractSDP(from: eventObj) {
+                    return nested
+                }
+                if let resultObj = dict["result"], let nested = extractSDP(from: resultObj) {
+                    return nested
+                }
+            }
+            return nil
+        }
+        
+        return try await withThrowingTaskGroup(of: String.self) { group in
+            let (stream, continuation) = AsyncThrowingStream<String, Error>.makeStream()
+            
+            let eventHandler: @Sendable (AnyCodable) async -> Void = { event in
+                let logger = Logger(subsystem: "com.nativeha.client", category: "Camera")
+                logger.notice("WebRTC event received: \(String(describing: event))")
+                
+                if let dict = event.dictionaryValue, let type = dict["type"]?.stringValue, type == "error" {
+                    let msg = dict["message"]?.stringValue ?? "WebRTC negotiation failed"
+                    logger.error("WebRTC returned error event: \(msg)")
+                    continuation.finish(throwing: HAClientError.commandFailed(message: msg))
+                    return
+                }
+                
+                if let sdp = extractSDP(from: event) {
+                    continuation.yield(sdp)
+                }
+            }
+            
+            self.subscriptionHandlers[id] = eventHandler
+            
+            // Task 1: Dispatch command and wait for answer event or immediate result
+            group.addTask {
+                let res = try await withCheckedThrowingContinuation { (cont: CheckedContinuation<AnyCodable?, Error>) in
+                    Task {
+                        await self.registerContinuation(id: id, cont: cont)
+                        do {
+                            try await self.webSocketTask?.send(.string(jsonString))
+                        } catch {
+                            await self.deregisterContinuation(id: id)
+                            cont.resume(throwing: error)
+                        }
+                    }
+                }
+                
+                if let directAnswer = extractSDP(from: res) {
+                    return directAnswer
+                }
+                
+                if let subId = res?.dictionaryValue?["subscription_id"]?.stringValue {
+                    let logger = Logger(subsystem: "com.nativeha.client", category: "Camera")
+                    logger.notice("WebRTC session subscription_id received: \(subId)")
+                    await self.registerStringSubscriptionHandler(id: subId, handler: eventHandler)
+                }
+                
+                for try await asyncAnswer in stream {
+                    return asyncAnswer
+                }
+                throw HAClientError.commandFailed(message: "No SDP answer received from stream")
+            }
+            
+            // Task 2: 35-second timeout for cloud SDP answer
+            group.addTask {
+                try await Task.sleep(nanoseconds: 35_000_000_000)
+                throw HAClientError.commandFailed(message: "WebRTC cloud answer timed out (35s)")
+            }
+            
+            let result = try await group.next()!
+            group.cancelAll()
+            self.subscriptionHandlers.removeValue(forKey: id)
+            return result
+        }
+    }
+    
+    private func registerStringSubscriptionHandler(id: String, handler: @escaping @Sendable (AnyCodable) async -> Void) {
+        stringSubscriptionHandlers[id] = handler
+    }
+    
+    private func registerContinuation(id: Int, cont: CheckedContinuation<AnyCodable?, Error>) {
+        pendingContinuations[id] = cont
+    }
+    
+    private func deregisterContinuation(id: Int) {
+        pendingContinuations.removeValue(forKey: id)
     }
     
     // MARK: - Subscriptions

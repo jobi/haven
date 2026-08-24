@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import OSLog
 
 @Observable
 @MainActor
@@ -378,5 +379,173 @@ public final class EntityStore {
         } catch {
             print("[EntityStore] Service call failed: \(error.localizedDescription)")
         }
+    }
+    
+    // MARK: - Camera Streaming & Snapshots
+    public func getAccessToken() async -> String? {
+        if let server = ServerStore.shared.activeServer {
+            return try? await HAAuthManager.shared.getValidAccessToken(for: server)
+        }
+        return nil
+    }
+    
+    public func fetchCameraCapabilities(entityId: String) async -> [String] {
+        guard let client = wsClient else { return ["webrtc", "web_rtc", "hls"] }
+        if let result = try? await client.sendCommand(
+            type: "camera/capabilities",
+            entityId: entityId
+        ) {
+            if let types = result.dictionaryValue?["frontend_stream_types"]?.arrayValue?.compactMap({ $0.stringValue }) {
+                Logger(subsystem: "com.nativeha.client", category: "Camera").notice("fetchCameraCapabilities for \(entityId): \(types)")
+                var normalized = types
+                if types.contains("web_rtc") && !types.contains("webrtc") {
+                    normalized.append("webrtc")
+                }
+                return normalized
+            }
+        }
+        return ["webrtc", "web_rtc", "hls"]
+    }
+    
+    public func signPath(_ path: String, expires: Int = 300) async -> String? {
+        guard let client = wsClient else { return nil }
+        if let result = try? await client.sendCommand(
+            type: "auth/sign_path",
+            path: path,
+            expires: expires
+        ) {
+            if let signedPath = result.dictionaryValue?["path"]?.stringValue {
+                return signedPath
+            }
+        }
+        return nil
+    }
+    
+    public func fetchSignedCameraSnapshot(entityId: String, width: Int = 946) async -> Data? {
+        guard let serverURL = serverURL else { return nil }
+        let basePath = "/api/camera_proxy/\(entityId)"
+        
+        let pathWithSig: String
+        if let signed = await signPath(basePath, expires: 300) {
+            pathWithSig = signed
+        } else {
+            pathWithSig = basePath
+        }
+        
+        let base = serverURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let cleanPath = pathWithSig.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let delimiter = cleanPath.contains("?") ? "&" : "?"
+        let urlStr = "\(base)/\(cleanPath)\(delimiter)width=\(width)&height=0"
+        
+        guard let url = URL(string: urlStr) ?? URL(string: "\(base)/\(cleanPath)") else { return nil }
+        
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 10
+        if let token = await getAccessToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            if let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode), data.count > 100 {
+                return data
+            }
+        } catch {
+            print("[EntityStore] fetchSignedCameraSnapshot error: \(error.localizedDescription)")
+        }
+        return nil
+    }
+    
+    public func sendWebRTCOffer(entityId: String, offer: String) async throws -> String {
+        let logger = Logger(subsystem: "com.nativeha.client", category: "Camera")
+        guard let client = wsClient else {
+            logger.error("sendWebRTCOffer: wsClient is nil")
+            throw HAWebSocketClient.HAClientError.notConnected
+        }
+        
+        logger.notice("sendWebRTCOffer: sending offer session for \(entityId) (sdp len: \(offer.count))")
+        return try await client.sendWebRTCOfferSession(entityId: entityId, offer: offer)
+    }
+    
+    public func cameraMJPEGStreamURL(entityId: String) async -> URL? {
+        guard let serverURL = serverURL else { return nil }
+        
+        var token: String? = nil
+        if let ent = entity(for: entityId) {
+            token = ent.attributes["access_token"]?.stringValue
+            if token == nil, let pic = ent.attributes["entity_picture"]?.stringValue,
+               let comp = URLComponents(string: pic),
+               let queryToken = comp.queryItems?.first(where: { $0.name == "token" })?.value {
+                token = queryToken
+            }
+        }
+        
+        if token == nil {
+            token = await getAccessToken()
+        }
+        
+        let base = serverURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let urlStr: String
+        if let token = token, !token.isEmpty {
+            urlStr = "\(base)/api/camera_proxy_stream/\(entityId)?token=\(token)"
+        } else {
+            urlStr = "\(base)/api/camera_proxy_stream/\(entityId)"
+        }
+        return URL(string: urlStr)
+    }
+    
+    public func fetchCameraStream(entityId: String) async throws -> URL? {
+        guard let client = wsClient, let serverURL = serverURL else { return nil }
+        
+        if let result = try await client.sendCommand(
+            type: "camera/stream",
+            entityId: entityId
+        ) {
+            if let streamPath = result.dictionaryValue?["url"]?.stringValue {
+                if streamPath.hasPrefix("http://") || streamPath.hasPrefix("https://") {
+                    return URL(string: streamPath)
+                } else {
+                    let base = serverURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                    let cleanPath = streamPath.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                    return URL(string: "\(base)/\(cleanPath)")
+                }
+            }
+        }
+        return nil
+    }
+    
+    public func fetchCameraSnapshot(entityId: String, entityPicture: String? = nil) async -> Data? {
+        guard let serverURL = serverURL else { return nil }
+        
+        let path: String
+        if let pic = entityPicture, !pic.isEmpty {
+            path = pic
+        } else {
+            path = "/api/camera_proxy/\(entityId)"
+        }
+        
+        let fullURLString: String
+        if path.hasPrefix("http://") || path.hasPrefix("https://") {
+            fullURLString = path
+        } else {
+            let base = serverURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            let cleanPath = path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            fullURLString = "\(base)/\(cleanPath)"
+        }
+        
+        guard let url = URL(string: fullURLString) else { return nil }
+        
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 8
+        
+        if let token = await getAccessToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        if let (data, response) = try? await URLSession.shared.data(for: request),
+           let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) {
+            return data
+        }
+        return nil
     }
 }

@@ -223,6 +223,9 @@ public struct EntityMoreInfoSheet: View {
         case "sensor", "binary_sensor":
             sensorControls
             
+        case "camera":
+            cameraControls
+            
         case "select", "input_select", "remote":
             selectControls
             
@@ -763,6 +766,63 @@ public struct EntityMoreInfoSheet: View {
                         }
                     }
                 ))
+            }
+        }
+    }
+    
+    // MARK: - 11. Camera Controls
+    @ViewBuilder
+    private var cameraControls: some View {
+        Section {
+            HACameraStreamView(
+                entityId: entityId,
+                entityStore: entityStore,
+                entityPicture: entity?.attributes["entity_picture"]?.stringValue
+            )
+            .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+            .listRowBackground(Color.clear)
+        }
+        
+        Section("Camera Status") {
+            if let streamType = entity?.attributes["frontend_stream_type"]?.stringValue {
+                HStack {
+                    Text("Stream Type")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(streamType.uppercased())
+                        .font(.subheadline.monospaced().weight(.semibold))
+                }
+            }
+            
+            if let motion = entity?.attributes["motion_detection"]?.boolValue {
+                HStack {
+                    Text("Motion Detection")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(motion ? "Active" : "Disabled")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(motion ? Color.green : Color.secondary)
+                }
+            }
+            
+            if let brand = entity?.attributes["brand"]?.stringValue {
+                HStack {
+                    Text("Brand")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(brand)
+                        .font(.subheadline)
+                }
+            }
+            
+            if let model = entity?.attributes["model_name"]?.stringValue {
+                HStack {
+                    Text("Model")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(model)
+                        .font(.subheadline)
+                }
             }
         }
     }
