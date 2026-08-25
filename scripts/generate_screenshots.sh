@@ -58,9 +58,20 @@ xcrun simctl io booted screenshot "$OUT_DIR/06_multi_server_settings.png"
 echo "==> Resetting to Home view..."
 xcrun simctl terminate booted org.bilien.haven >/dev/null 2>&1 || true
 xcrun simctl launch booted org.bilien.haven -demo -view home
+sleep 2
+
+echo "==> 8. Formatting screenshots to exact App Store 6.5\"/6.7\" resolution (1284 × 2778 px)..."
+for img in "$OUT_DIR"/*.png; do
+    sips -z 2778 1284 "$img" --out "$img" > /dev/null 2>&1
+done
 
 echo ""
 echo "============================================================"
-echo " ✅ All 6 App Store Screenshots Generated in: $OUT_DIR"
+echo " ✅ All 6 App Store Screenshots Generated (1284 × 2778 px)"
+echo " Location: $OUT_DIR"
 echo "============================================================"
-ls -lh "$OUT_DIR"
+for img in "$OUT_DIR"/*.png; do
+    w=$(sips -g pixelWidth "$img" | awk '/pixelWidth/{print $2}')
+    h=$(sips -g pixelHeight "$img" | awk '/pixelHeight/{print $2}')
+    echo "  • $(basename "$img"): ${w} × ${h} px"
+done
