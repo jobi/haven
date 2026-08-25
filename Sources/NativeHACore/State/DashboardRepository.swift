@@ -71,8 +71,9 @@ public final class DashboardRepository {
         let config = DemoDataProvider.shared.generateDemoDashboard()
         self.currentDashboardConfig = config
         self.sectionViews = config.views.filter { $0.isSectionsType }
-        
-        if let firstView = config.views.first {
+        if let current = selectedViewId, config.views.contains(where: { $0.id == current }) {
+            // Preserve selected view
+        } else if let firstView = config.views.first {
             self.selectedViewId = firstView.id
         }
     }

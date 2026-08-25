@@ -18,6 +18,7 @@ public final class AppState {
     
     public var isShowingSettings: Bool = false
     public var isShowingAddServerSheet: Bool = false
+    public var presentedMoreInfoEntityId: String? = nil
     
     public init(serverStore: ServerStore = .shared) {
         self.serverStore = serverStore
@@ -39,6 +40,27 @@ public final class AppState {
         
         setupWebSocketListener()
         syncQuickActions()
+        
+        // Handle Launch Arguments for automated testing & screenshot generation
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("-demo") {
+            enableDemoMode()
+        }
+        if let viewIndex = args.firstIndex(of: "-view"), viewIndex + 1 < args.count {
+            let viewName = args[viewIndex + 1]
+            self.dashboardRepository.selectedViewId = viewName
+        }
+        if let moreInfoIndex = args.firstIndex(of: "-more_info"), moreInfoIndex + 1 < args.count {
+            let entityId = args[moreInfoIndex + 1]
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                self.presentedMoreInfoEntityId = entityId
+            }
+        }
+        if args.contains("-settings") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                self.isShowingSettings = true
+            }
+        }
     }
     
     public var activeServer: ServerConfig? {
@@ -206,6 +228,34 @@ public final class AppState {
             activeServerId: serverStore.activeServerId
         )
         #endif
+    }
+    public func handleDeepLink(_ url: URL) {
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let queryItems = components?.queryItems ?? []
+        let host = url.host ?? ""
+        
+        if host == "demo" || url.scheme == "haven" {
+            if activeServer?.isDemo != true {
+                enableDemoMode()
+            }
+            
+            // Check view selection: ?view=home / ?view=security / ?view=energy
+            if let viewParam = queryItems.first(where: { $0.name == "view" })?.value {
+                dashboardRepository.selectedViewId = viewParam
+            }
+            
+            // Check more info: ?more_info=light.living_room_ceiling
+            if let entityParam = queryItems.first(where: { $0.name == "more_info" })?.value {
+                presentedMoreInfoEntityId = entityParam
+            } else if queryItems.contains(where: { $0.name == "more_info" && $0.value == "" }) {
+                presentedMoreInfoEntityId = nil
+            }
+            
+            // Check settings: ?settings=true
+            if let settingsParam = queryItems.first(where: { $0.name == "settings" })?.value {
+                isShowingSettings = (settingsParam == "true" || settingsParam == "1")
+            }
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct EntityMoreInfoItem: Identifiable, Sendable {
+public struct EntityMoreInfoItem: Identifiable, Sendable, Equatable, Hashable {
     public let id: String
     public init(id: String) { self.id = id }
 }
@@ -14,6 +14,7 @@ public struct DashboardHostView: View {
     var onAddServer: (() -> Void)?
     var onOpenSettings: () -> Void
     var onReconnect: () -> Void
+    @Binding var externalMoreInfoEntityId: String?
     
     @State private var presentedMoreInfoItem: EntityMoreInfoItem? = nil
     
@@ -22,6 +23,7 @@ public struct DashboardHostView: View {
         entityStore: EntityStore,
         connectionState: HAConnectionState,
         serverStore: ServerStore? = nil,
+        externalMoreInfoEntityId: Binding<String?> = .constant(nil),
         onSwitchServer: ((String) -> Void)? = nil,
         onAddServer: (() -> Void)? = nil,
         onOpenSettings: @escaping () -> Void,
@@ -31,6 +33,7 @@ public struct DashboardHostView: View {
         self.entityStore = entityStore
         self.connectionState = connectionState
         self.serverStore = serverStore
+        self._externalMoreInfoEntityId = externalMoreInfoEntityId
         self.onSwitchServer = onSwitchServer
         self.onAddServer = onAddServer
         self.onOpenSettings = onOpenSettings
@@ -130,6 +133,18 @@ public struct DashboardHostView: View {
             }
             .sheet(item: $presentedMoreInfoItem) { item in
                 EntityMoreInfoSheet(entityId: item.id, entityStore: entityStore)
+            }
+            .onChange(of: externalMoreInfoEntityId) { _, newId in
+                if let id = newId {
+                    presentedMoreInfoItem = EntityMoreInfoItem(id: id)
+                } else {
+                    presentedMoreInfoItem = nil
+                }
+            }
+            .onChange(of: presentedMoreInfoItem) { _, newItem in
+                if newItem == nil && externalMoreInfoEntityId != nil {
+                    externalMoreInfoEntityId = nil
+                }
             }
         }
     }

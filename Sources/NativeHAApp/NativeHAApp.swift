@@ -57,6 +57,7 @@ struct NativeHAApp: App {
                         entityStore: appState.entityStore,
                         connectionState: appState.connectionState,
                         serverStore: appState.serverStore,
+                        externalMoreInfoEntityId: $appState.presentedMoreInfoEntityId,
                         onSwitchServer: { serverId in
                             appState.switchToServer(id: serverId)
                         },
@@ -113,6 +114,9 @@ struct NativeHAApp: App {
                 if appState.isConfigured {
                     await appState.connect()
                 }
+            }
+            .onOpenURL { url in
+                appState.handleDeepLink(url)
             }
             #if os(iOS)
             .onReceive(NotificationCenter.default.publisher(for: .havenDidPerformQuickAction)) { notification in

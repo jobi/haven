@@ -44,11 +44,13 @@ public struct HACameraStreamView: View {
     }
     
     private var hasAnyVisualMedia: Bool {
+        if entityStore.isDemoMode { return true }
         #if os(iOS)
-        return staticSnapshot != nil || isWebRTCPlaying || hlsPlayer != nil
-        #else
-        return true
+        if staticSnapshot != nil { return true }
         #endif
+        if isWebRTCPlaying { return true }
+        if hlsPlayer != nil { return true }
+        return false
     }
     
     public var body: some View {
@@ -61,7 +63,7 @@ public struct HACameraStreamView: View {
                 
                 // 1. Base Layer: Live Signed Snapshot (Instant initial visual)
                 #if os(iOS)
-                if let snapshot = staticSnapshot, !isWebRTCPlaying {
+                if let snapshot = staticSnapshot ?? (entityStore.isDemoMode ? generateDemoCameraSnapshot(entityId: entityId) : nil), !isWebRTCPlaying {
                     Image(uiImage: snapshot)
                         .resizable()
                         .aspectRatio(contentMode: .fit)

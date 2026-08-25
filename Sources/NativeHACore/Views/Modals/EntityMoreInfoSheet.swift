@@ -154,6 +154,7 @@ public struct EntityMoreInfoSheet: View {
             }
             .onChange(of: entity?.state) {
                 syncLocalState()
+                loadHistory()
             }
             .onChange(of: selectedHistoryHours) {
                 loadHistory()
@@ -165,13 +166,15 @@ public struct EntityMoreInfoSheet: View {
         Task {
             let val = Double(entity?.state ?? "")
             let points = await HistoryService.shared.fetchHistory(
-                serverURL: entityStore.serverURL,
+                serverURL: entityStore.isDemoMode ? nil : entityStore.serverURL,
                 token: nil,
                 entityId: entityId,
                 currentValue: val,
                 hours: selectedHistoryHours
             )
-            historyPoints = points
+            await MainActor.run {
+                self.historyPoints = points
+            }
         }
     }
     
