@@ -17,9 +17,9 @@ This guide contains everything required to configure, list, and submit **Haven**
 - **Pricing**: `Free` (Tier 0)
 
 ### URLs Required by Apple
-- **Privacy Policy URL**: A publicly accessible URL stating privacy practices (e.g. `https://github.com/jobi/nativeha/blob/main/docs/PRIVACY_POLICY.md` or a GitHub Pages link).
-- **Support URL**: `https://github.com/jobi/nativeha/issues` (or personal support webpage).
-- **Marketing URL** *(Optional)*: `https://github.com/jobi/nativeha`
+- **Privacy Policy URL**: A publicly accessible URL stating privacy practices (e.g. `https://github.com/jobi/haven/blob/main/docs/PRIVACY_POLICY.md` or a GitHub Pages link).
+- **Support URL**: `https://github.com/jobi/haven/issues` (or personal support webpage).
+- **Marketing URL** *(Optional)*: `https://github.com/jobi/haven`
 
 ---
 

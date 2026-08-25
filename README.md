@@ -1,4 +1,4 @@
-# NativeHA: Native iOS Client for Home Assistant
+# Haven: Native iOS Client for Home Assistant
 
 A high-performance, 100% native iOS / iPadOS client for [Home Assistant](https://www.home-assistant.io) built specifically to render modern **Section-based dashboards** using pure SwiftUI.
 
@@ -12,6 +12,7 @@ A high-performance, 100% native iOS / iPadOS client for [Home Assistant](https:/
 - **Zero Third-Party Dependencies:** Built entirely with standard Apple SDK frameworks (`SwiftUI`, `URLSession`, `Observation`, `Security`, `Charts`).
 - **Apple HIG + Home Assistant Styling:** Native materials, haptics, spring animations, and dark/light modes infused with Home Assistant's design system.
 - **Persistent Auth:** Supports OAuth2 (`ASWebAuthenticationSession`) and Long-Lived Access Tokens stored securely in the iOS Keychain.
+- **Built-in Demo Smart Home:** Full offline simulation sandbox for evaluation, testing, and screenshots without needing a live server.
 
 ---
 
@@ -27,6 +28,7 @@ A high-performance, 100% native iOS / iPadOS client for [Home Assistant](https:/
 | **Gauge Card (`gauge`)** | Circular arc gauges with green/yellow/red severity threshold coloring. |
 | **Markdown Card (`markdown`)** | Formatted rich markdown content. |
 | **Badges (`badge`)** | Top-level view badge shelf with compact status pills. |
+| **Picture Entity (`picture-entity`)** | Live camera video streams with WebRTC/HLS/snapshot capabilities. |
 | **Unsupported Fallback** | Graceful fallback container displaying card type and raw JSON for custom HACS cards without crashing. |
 
 ---
@@ -34,7 +36,7 @@ A high-performance, 100% native iOS / iPadOS client for [Home Assistant](https:/
 ## Architecture Overview
 
 ```
-NativeHA/
+Haven/
 ├── Package.swift                     # Swift Package configuration
 ├── Sources/
 │   ├── NativeHACore/                 # Core Library Target
@@ -43,6 +45,7 @@ NativeHA/
 │   │   ├── Auth/                     # KeychainStorage, ServerConfig, HAAuthManager
 │   │   ├── State/                    # EntityStore, DashboardRepository
 │   │   ├── Layout/                   # SectionLayoutEngine, AdaptiveGridContainer
+│   │   ├── Demo/                     # Simulated Smart Home backend and entities
 │   │   ├── Utilities/                # IconMapper (MDI -> SF Symbols), Color+HA
 │   │   └── Views/                    # SwiftUI Card components, Dashboard layouts, Setup modals
 │   └── NativeHAApp/                  # App Target & @main entrypoint
@@ -64,8 +67,8 @@ swift test
 ```
 
 ### Xcode
-1. Open the project folder (`/Users/jobi/src/nativeha`) directly in Xcode via `File > Open...`.
-2. Select the `NativeHAApp` target and an iOS simulator or connected iPhone/iPad.
+1. Open the project in Xcode (`NativeHA.xcodeproj` or open the folder directly).
+2. Select the `Haven` target and an iOS simulator or connected iPhone/iPad.
 3. Press `Cmd + R` to build and run.
 
 ---
@@ -73,3 +76,6 @@ swift test
 ## Documentation
 - [SPEC.md](SPEC.md): Full technical specification document.
 - [FEASIBILITY_STUDY.md](FEASIBILITY_STUDY.md): In-depth API, UI, and performance feasibility study.
+- [docs/CAMERA_STREAMING.md](docs/CAMERA_STREAMING.md): Technical deep-dive on WebRTC / HLS video streaming.
+- [docs/APP_STORE_SUBMISSION.md](docs/APP_STORE_SUBMISSION.md): Complete App Store submission and metadata guide.
+- [docs/PRIVACY_POLICY.md](docs/PRIVACY_POLICY.md): Privacy policy statement.

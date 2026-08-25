@@ -1,4 +1,4 @@
-# Technical Specification: NativeHA (Native iOS Client for Home Assistant)
+# Technical Specification: Haven (Native iOS Client for Home Assistant)
 
 **Document Version:** 1.0.0  
 **Target Platform:** iOS 17.0+ / iPadOS 17.0+  
@@ -10,7 +10,7 @@
 ## 1. Executive Summary & Vision
 
 ### 1.1 Purpose
-`NativeHA` is a lightweight, high-performance native iOS application designed to render Home Assistant dashboards natively using SwiftUI. While the official Home Assistant Companion app utilizes web views (`WKWebView`) to display Lovelace dashboards, `NativeHA` translates the Home Assistant dashboard schema—specifically modern **Sections-based dashboards**—into native SwiftUI view hierarchies, native controls, and hardware-accelerated animations.
+`Haven` is a lightweight, high-performance native iOS application designed to render Home Assistant dashboards natively using SwiftUI. While the official Home Assistant Companion app utilizes web views (`WKWebView`) to display Lovelace dashboards, `Haven` translates the Home Assistant dashboard schema—specifically modern **Sections-based dashboards**—into native SwiftUI view hierarchies, native controls, and hardware-accelerated animations.
 
 ### 1.2 Core Value Proposition
 - **Fluid 120Hz Native Performance:** Eliminates webview stutter, scroll latency, and DOM repaint overhead.
@@ -100,7 +100,7 @@ The app supports two authentication mechanisms:
 1. **Authorization Request:**
    - Opens `ASWebAuthenticationSession` to:
      `{server_url}/auth/authorize?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code`
-   - Client ID: `https://home-assistant.io/iOS` or custom app bundle ID scheme `nativeha://auth-callback`.
+   - Client ID: `https://home-assistant.io/iOS` or custom app bundle ID scheme `haven://auth-callback`.
 2. **Token Exchange:**
    - `POST {server_url}/auth/token` with payload:
      ```json
@@ -120,7 +120,7 @@ The app supports two authentication mechanisms:
 
 ### 3.3 Secure Storage (Keychain)
 Tokens must be securely stored in the iOS Keychain using `kSecClassGenericPassword`:
-- Service: `com.nativeha.auth`
+- Service: `org.bilien.haven.auth`
 - Account: `ha_server_tokens_{server_id}`
 - Stored data: Encrypted JSON containing `accessToken`, `refreshToken`, `tokenType`, `expiryDate`, `serverURL`.
 
@@ -673,54 +673,6 @@ NativeHA/
 │   │
 │   └── Utilities/
 │       ├── IconMapper.swift              # MDI -> SF Symbols resolver
-│       ├── AnyCodable.swift              # Type-erased JSON decoder helper
-│       └── Color+Extensions.swift        # HA theme palette & color hex parser
-│
-├── Models/
-│   ├── HAEntity.swift                    # Entity state & attribute models
-│   ├── LovelaceConfig.swift              # View, Section, and Badges schema
-│   └── CardConfig.swift                  # Concrete Card config models (Tile, etc.)
-│
-├── Layout/
-│   ├── SectionLayoutEngine.swift         # Grid math & breakpoint calculator
-│   └── AdaptiveGridContainer.swift       # SwiftUI multi-column section container
-│
-├── Views/
-│   ├── Setup/
-│   │   ├── ServerSetupView.swift         # URL entry & connectivity tester
-│   │   └── OAuthLoginView.swift          # ASWebAuthenticationSession wrapper
-│   │
-│   ├── Dashboard/
-│   │   ├── DashboardHostView.swift       # Main container (iPhone/iPad adaptive)
-│   │   ├── DashboardSelectorMenu.swift   # Switcher for section dashboards
-│   │   ├── SectionViewContainer.swift    # View header, badges, and section grid
-│   │   └── SectionContainerView.swift    # Individual section box & card stack
-│   │
-│   ├── Cards/
-│   │   ├── CardViewFactory.swift         # Polymorphic card dispatcher
-│   │   ├── HeadingCardView.swift         # Section heading card
-│   │   ├── TileCardView.swift            # Interactive tile card + slider
-│   │   ├── ButtonCardView.swift          # Action button card
-│   │   ├── EntitiesCardView.swift        # Multi-row entities card
-│   │   ├── SensorCardView.swift          # Sensor & sparkline card
-│   │   ├── GaugeCardView.swift           # Native circular gauge card
-│   │   ├── MarkdownCardView.swift        # Formatted markdown card
-│   │   ├── BadgePillView.swift           # Header badge pill
-│   │   └── UnsupportedCardView.swift     # Graceful fallback card
-│   │
-│   └── Modals/
-│       ├── EntityMoreInfoSheet.swift     # Entity details, history, & controls
-│       └── SettingsSheet.swift           # Server info, disconnect, debug logs
-│
-└── Resources/
-    ├── Assets.xcassets                   # App icons, accent colors
-    └── Preview Content/
-        └── MockData.swift                # Mock JSON payloads for Xcode Previews
-```
-
----
-
-## 11. Implementation Phases for Coding Agents
 
 Coding agents implementing this project should proceed in the following ordered phases:
 
@@ -766,6 +718,6 @@ Coding agents implementing this project should proceed in the following ordered 
 | **AC-03** | Dashboard Filtering | Connect to an instance with mixed dashboards (Masonry, Section); verify only Section dashboards/views appear in the selector. |
 | **AC-04** | Responsive Layout | Test on iPhone SE (1 column), iPhone 15 Pro Max (1 column), iPad Air (2 columns), iPad Pro 12.9" Landscape (3-4 columns). Verify fluid reflow on rotation and Stage Manager resizing. |
 | **AC-05** | Real-time Entity Sync | Change a light's state in HA Web UI; verify the native tile card updates state, icon, and brightness within <200ms without manual refresh. |
-| **AC-06** | Entity Interaction | Tap a tile/button in NativeHA; verify the physical device or HA state toggles immediately and plays appropriate haptic feedback. |
+| **AC-06** | Entity Interaction | Tap a tile/button in Haven; verify the physical device or HA state toggles immediately and plays appropriate haptic feedback. |
 | **AC-07** | Graceful Degradation | Load a dashboard with an unsupported custom card (e.g. `type: "custom:button-card"`); verify `UnsupportedCardView` renders without crashing the app. |
 | **AC-08** | HIG & Visual Design | Verify native iOS materials, rounded corners (16pt), dynamic type scaling, and seamless light/dark mode transitions. |

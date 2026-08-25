@@ -17,4 +17,4 @@ All authentication tokens, server addresses, and preferences are stored locally 
 WebRTC and HLS video streaming feeds are established directly between your device and your Home Assistant server or cloud camera provider (such as Google Nest SDM). Haven developers have no access to your video or audio feeds.
 
 ## 5. Contact
-If you have questions about this privacy policy, you can open an issue on the GitHub repository: https://github.com/jobi/nativeha/issues
+If you have questions about this privacy policy, you can open an issue on the GitHub repository: https://github.com/jobi/haven/issues

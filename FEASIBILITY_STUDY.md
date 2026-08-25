@@ -1,4 +1,4 @@
-# Feasibility Study: Native iOS Home Assistant Client (NativeHA)
+# Feasibility Study: Native iOS Home Assistant Client (Haven)
 
 **Date:** August 2026  
 **Document Status:** Complete  
@@ -123,25 +123,25 @@ struct AdaptiveSectionsGrid: View {
 │                        Memory Footprint (RAM)                          │
 │                                                                        │
 │  HA Companion (WebKit + DOM):   ████████████████████████  180 - 350 MB │
-│  NativeHA (SwiftUI + WS):       ███  25 - 45 MB  (85% Reduction!)      │
+│  Haven (SwiftUI + WS):          ███  25 - 45 MB  (85% Reduction!)      │
 └────────────────────────────────────────────────────────────────────────┘
 
 ┌────────────────────────────────────────────────────────────────────────┐
 │                         Frame Rate & Latency                           │
 │                                                                        │
 │  HA Companion (Web):            60Hz max, 30-45 FPS during fast scroll │
-│  NativeHA (SwiftUI):            Fluid 120Hz ProMotion (zero dropped fps)│
+│  Haven (SwiftUI):               Fluid 120Hz ProMotion (zero dropped fps)│
 └────────────────────────────────────────────────────────────────────────┘
 
 ┌────────────────────────────────────────────────────────────────────────┐
 │                         Initial Cold Launch Time                       │
 │                                                                        │
 │  HA Companion (Web):            1.8s - 3.5s (JS bundle parse & hydrate)│
-│  NativeHA (SwiftUI):            < 0.4s (Instant binary launch)         │
+│  Haven (SwiftUI):               < 0.4s (Instant binary launch)         │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 4.2 Why NativeHA Will Perform Exceptionally Well:
+### 4.2 Why Haven Will Perform Exceptionally Well:
 1. **Zero Web Engine Overhead:** Eliminates WebKit process spawning, V8/JavaScript execution, CSS reflows, and DOM serialization.
 2. **Efficient State Diffs:** Home Assistant's `subscribe_entities` pushes binary-like dictionary deltas. In Swift, parsing these lightweight JSON fragments on a background Actor takes **< 2 milliseconds**.
 3. **Targeted View Invalidation:** With Swift's `@Observable` macro (iOS 17+), only the specific `TileCardView` or `BadgePillView` referencing a changed `entity_id` is re-evaluated. The rest of the dashboard view tree remains completely untouched.
@@ -162,7 +162,7 @@ struct AdaptiveSectionsGrid: View {
 
 ## 6. Conclusion & Recommendation
 
-The feasibility study confirms that **building `NativeHA` according to the current `SPEC.md` is 100% viable, technically sound, and will deliver dramatic performance improvements over webview-based approaches.**
+The feasibility study confirms that **building `Haven` according to the current `SPEC.md` is 100% viable, technically sound, and will deliver dramatic performance improvements over webview-based approaches.**
 
 ### Key Takeaways:
 1. **API Readiness:** Home Assistant provides all necessary APIs over WebSocket out of the box.

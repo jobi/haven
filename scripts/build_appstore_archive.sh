@@ -19,6 +19,7 @@ xcodebuild -project "$PROJECT_PATH" \
     -configuration Release \
     -destination "generic/platform=iOS" \
     -archivePath "$ARCHIVE_PATH" \
+    -allowProvisioningUpdates \
     archive
 
 echo ""
