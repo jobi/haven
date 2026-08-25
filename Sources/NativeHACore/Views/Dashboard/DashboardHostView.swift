@@ -41,15 +41,37 @@ public struct DashboardHostView: View {
     }
     
     public var body: some View {
-        #if os(iOS)
-        if UIDevice.current.userInterfaceIdiom == .pad {
+        Group {
+            #if os(iOS)
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                splitViewLayout
+            } else {
+                stackLayout
+            }
+            #else
             splitViewLayout
-        } else {
-            stackLayout
+            #endif
         }
-        #else
-        splitViewLayout
-        #endif
+        .sheet(item: $presentedMoreInfoItem) { item in
+            EntityMoreInfoSheet(entityId: item.id, entityStore: entityStore)
+        }
+        .onAppear {
+            if let id = externalMoreInfoEntityId {
+                presentedMoreInfoItem = EntityMoreInfoItem(id: id)
+            }
+        }
+        .onChange(of: externalMoreInfoEntityId) { _, newId in
+            if let id = newId {
+                presentedMoreInfoItem = EntityMoreInfoItem(id: id)
+            } else {
+                presentedMoreInfoItem = nil
+            }
+        }
+        .onChange(of: presentedMoreInfoItem) { _, newItem in
+            if newItem == nil && externalMoreInfoEntityId != nil {
+                externalMoreInfoEntityId = nil
+            }
+        }
     }
     
     // MARK: - iPhone Stack Layout
@@ -130,21 +152,6 @@ public struct DashboardHostView: View {
                     }
                 }
                 #endif
-            }
-            .sheet(item: $presentedMoreInfoItem) { item in
-                EntityMoreInfoSheet(entityId: item.id, entityStore: entityStore)
-            }
-            .onChange(of: externalMoreInfoEntityId) { _, newId in
-                if let id = newId {
-                    presentedMoreInfoItem = EntityMoreInfoItem(id: id)
-                } else {
-                    presentedMoreInfoItem = nil
-                }
-            }
-            .onChange(of: presentedMoreInfoItem) { _, newItem in
-                if newItem == nil && externalMoreInfoEntityId != nil {
-                    externalMoreInfoEntityId = nil
-                }
             }
         }
     }
@@ -243,9 +250,6 @@ public struct DashboardHostView: View {
                 } else {
                     emptyStateView
                 }
-            }
-            .sheet(item: $presentedMoreInfoItem) { item in
-                EntityMoreInfoSheet(entityId: item.id, entityStore: entityStore)
             }
         }
     }
