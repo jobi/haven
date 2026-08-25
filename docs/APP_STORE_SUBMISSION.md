@@ -71,12 +71,26 @@ Provide the following in the **App Review Notes** field to ensure seamless appro
 
 ### Reviewer Notes Copy:
 ```
-Haven is a client for the open-source Home Assistant smart home platform. It communicates directly with a user's self-hosted Home Assistant server via standard HTTP REST and WebSocket APIs.
+Haven is a native client for the open-source Home Assistant smart home platform.
 
-To test the application:
-1. Users enter their Home Assistant server URL (e.g. https://demo.home-assistant.io or their personal local/Tailscale URL).
-2. The app uses standard OAuth2 / Long-Lived Access Token authorization directly on the user's server.
-3. No account creation with our app is required; credentials are authenticated directly against Home Assistant and stored locally in the secure iOS Keychain.
+FOR EASY APP REVIEW TESTING (NO SERVER REQUIRED):
+The app includes a built-in "Demo Smart Home" sandbox specifically designed for App Review and showcasing app features without requiring external smart home hardware or a self-hosted Home Assistant server.
+
+1. When launching the app for the first time (or on the Server Setup screen), tap:
+   "Explore Demo Smart Home (No Server Required)"
+2. This instantly loads an interactive simulated smart home with 30+ entities across 3 dashboard views (Home, Security, Energy & Climate).
+3. Reviewers can exercise all native app capabilities:
+   • Interactive Quick Controls (toggling lights, espresso machine, blinds, ceiling fans, front door lock).
+   • Rich Light Controls: tap any light to open brightness sliders, Kelvin color temperature controls, and color preset palettes.
+   • Historical Sensor Charts: tap temperature/humidity sensors to view 24h interactive historical graphs and statistics.
+   • Live Security Camera Feeds: navigate to the "Security" tab to view live camera streams with motion detection bounding boxes and HUD overlays.
+   • Multi-Server Management: tap the Settings gear icon in the top toolbar to test server switching, dashboard reloads, and connection management.
+
+FOR TESTING WITH A LIVE HOME ASSISTANT SERVER:
+1. Tap Settings (gear icon) -> "Add Another Server" (or enter a server URL on the setup screen).
+2. Enter any Home Assistant instance URL (e.g. personal local/Tailscale URL, Nabu Casa Cloud, or reverse proxy).
+3. The app authenticates directly with the user's server via standard OAuth2 / Long-Lived Access Tokens.
+4. No account creation with our app is required; all credentials stay securely stored in the iOS Keychain.
 ```
 
 ---
