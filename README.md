@@ -79,3 +79,10 @@ swift test
 - [docs/CAMERA_STREAMING.md](docs/CAMERA_STREAMING.md): Technical deep-dive on WebRTC / HLS video streaming.
 - [docs/APP_STORE_SUBMISSION.md](docs/APP_STORE_SUBMISSION.md): Complete App Store submission and metadata guide.
 - [docs/PRIVACY_POLICY.md](docs/PRIVACY_POLICY.md): Privacy policy statement.
+
+---
+
+## License
+
+Haven is open-source software licensed under the [Apache License, Version 2.0](LICENSE).
+Copyright © 2026 Johan Bilien.
