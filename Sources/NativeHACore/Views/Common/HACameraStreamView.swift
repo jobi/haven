@@ -232,6 +232,15 @@ public struct HACameraStreamView: View {
         streamError = nil
         debugStatus = "Checking capabilities..."
         
+        if entityStore.isDemoMode {
+            self.debugStatus = "Demo Live Feed"
+            self.streamMode = .snapshot
+            await fetchSnapshot()
+            startSnapshotPolling()
+            self.isConnecting = false
+            return
+        }
+        
         // 1. Fetch initial signed snapshot immediately
         await fetchSnapshot()
         startSnapshotPolling()
@@ -283,6 +292,16 @@ public struct HACameraStreamView: View {
     
     private func fetchSnapshot() async {
         #if os(iOS)
+        if entityStore.isDemoMode {
+            let demoImage = generateDemoCameraSnapshot(entityId: entityId)
+            await MainActor.run {
+                self.staticSnapshot = demoImage
+                self.isConnecting = false
+                self.streamError = nil
+            }
+            return
+        }
+        
         // 1. Fetch high-resolution signed camera snapshot
         if let data = await entityStore.fetchSignedCameraSnapshot(entityId: entityId, width: 1280),
            let image = UIImage(data: data) {
@@ -305,6 +324,67 @@ public struct HACameraStreamView: View {
         }
         #endif
     }
+    
+    #if os(iOS)
+    private func generateDemoCameraSnapshot(entityId: String) -> UIImage {
+        let size = CGSize(width: 640, height: 360)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { ctx in
+            let colors: [CGColor]
+            let cameraTitle: String
+            if entityId.contains("backyard") {
+                colors = [
+                    UIColor(red: 0.08, green: 0.14, blue: 0.12, alpha: 1.0).cgColor,
+                    UIColor(red: 0.04, green: 0.06, blue: 0.05, alpha: 1.0).cgColor
+                ]
+                cameraTitle = "BACKYARD HD"
+            } else if entityId.contains("front_door") {
+                colors = [
+                    UIColor(red: 0.12, green: 0.10, blue: 0.16, alpha: 1.0).cgColor,
+                    UIColor(red: 0.05, green: 0.04, blue: 0.08, alpha: 1.0).cgColor
+                ]
+                cameraTitle = "FRONT PORCH HD"
+            } else {
+                colors = [
+                    UIColor(red: 0.10, green: 0.12, blue: 0.16, alpha: 1.0).cgColor,
+                    UIColor(red: 0.04, green: 0.05, blue: 0.08, alpha: 1.0).cgColor
+                ]
+                cameraTitle = "LIVING ROOM HD"
+            }
+            
+            let colorSpace = CGColorSpaceCreateDeviceRGB()
+            if let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: [0.0, 1.0]) {
+                ctx.cgContext.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: 0, y: size.height), options: [])
+            }
+            
+            // Draw subtle camera HUD elements
+            let titleAttrs: [NSAttributedString.Key: Any] = [
+                .font: UIFont.monospacedSystemFont(ofSize: 13, weight: .bold),
+                .foregroundColor: UIColor.white.withAlphaComponent(0.85)
+            ]
+            
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+            let timeStr = formatter.string(from: Date())
+            let hudStr = "● LIVE   \(cameraTitle)   \(timeStr)"
+            (hudStr as NSString).draw(at: CGPoint(x: 16, y: 16), withAttributes: titleAttrs)
+            
+            // Motion indicator if backyard
+            if entityId.contains("backyard") {
+                let boxRect = CGRect(x: 220, y: 120, width: 200, height: 140)
+                ctx.cgContext.setStrokeColor(UIColor.systemGreen.withAlphaComponent(0.6).cgColor)
+                ctx.cgContext.setLineWidth(2.0)
+                ctx.cgContext.stroke(boxRect)
+                
+                let motionAttrs: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.monospacedSystemFont(ofSize: 10, weight: .semibold),
+                    .foregroundColor: UIColor.systemGreen
+                ]
+                ("MOTION DETECTED (0.92)" as NSString).draw(at: CGPoint(x: 224, y: 104), withAttributes: motionAttrs)
+            }
+        }
+    }
+    #endif
     
     private func startSnapshotPolling() {
         snapshotPollingTimer?.invalidate()

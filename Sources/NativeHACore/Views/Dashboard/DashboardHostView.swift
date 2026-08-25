@@ -94,6 +94,21 @@ public struct DashboardHostView: View {
                     )
                 }
                 #if os(iOS)
+                if serverStore?.activeServer?.isDemo == true {
+                    ToolbarItem(placement: .topBarLeading) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "sparkles")
+                                .font(.caption2.weight(.bold))
+                            Text("DEMO")
+                                .font(.system(size: 10, weight: .heavy, design: .rounded))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.purple, in: Capsule())
+                    }
+                }
+                
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         onOpenSettings()

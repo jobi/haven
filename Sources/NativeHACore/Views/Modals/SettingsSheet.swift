@@ -40,9 +40,9 @@ public struct SettingsSheet: View {
                             dismiss()
                         } label: {
                             HStack(spacing: 12) {
-                                Image(systemName: "server.rack")
+                                Image(systemName: server.isDemo ? "sparkles" : "server.rack")
                                     .font(.title3)
-                                    .foregroundStyle(isActive ? Color.haBlue : Color.secondary)
+                                    .foregroundStyle(server.isDemo ? Color.purple : (isActive ? Color.haBlue : Color.secondary))
                                 
                                 VStack(alignment: .leading, spacing: 2) {
                                     HStack {
@@ -52,17 +52,17 @@ public struct SettingsSheet: View {
                                         if isActive {
                                             Text("Active")
                                                 .font(.caption2.weight(.bold))
-                                                .foregroundStyle(Color.haBlue)
+                                                .foregroundStyle(server.isDemo ? Color.purple : Color.haBlue)
                                                 .padding(.horizontal, 6)
                                                 .padding(.vertical, 2)
                                                 .background(
                                                     Capsule()
-                                                        .fill(Color.haBlue.opacity(0.12))
+                                                        .fill((server.isDemo ? Color.purple : Color.haBlue).opacity(0.12))
                                                 )
                                         }
                                     }
                                     
-                                    Text(server.url.absoluteString)
+                                    Text(server.isDemo ? "Simulated Smart Home Sandbox" : server.url.absoluteString)
                                         .font(.caption.monospaced())
                                         .foregroundStyle(.secondary)
                                         .lineLimit(1)
@@ -72,7 +72,7 @@ public struct SettingsSheet: View {
                                 
                                 if isActive {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(Color.haBlue)
+                                        .foregroundStyle(server.isDemo ? Color.purple : Color.haBlue)
                                 }
                             }
                             .contentShape(Rectangle())
@@ -94,6 +94,17 @@ public struct SettingsSheet: View {
                     } label: {
                         Label("Add Another Server", systemImage: "plus.circle.fill")
                             .foregroundStyle(Color.haBlue)
+                    }
+                    
+                    if !serverStore.servers.contains(where: { $0.isDemo }) {
+                        Button {
+                            serverStore.addServer(ServerConfig.demoServer, makeActive: true)
+                            onSwitchServer(ServerConfig.demoServerId)
+                            dismiss()
+                        } label: {
+                            Label("Add Demo Smart Home", systemImage: "sparkles")
+                                .foregroundStyle(Color.purple)
+                        }
                     }
                 } header: {
                     Text("Configured Servers")

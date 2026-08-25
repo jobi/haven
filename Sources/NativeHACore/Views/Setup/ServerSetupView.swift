@@ -91,6 +91,39 @@ public struct ServerSetupView: View {
                     }
                     .disabled(isConnecting || serverUrlString.isEmpty || (useManualToken && longLivedToken.isEmpty))
                 }
+                
+                Section {
+                    Button {
+                        onLoginSuccess(ServerConfig.demoServer)
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "sparkles")
+                                .font(.title3.weight(.semibold))
+                                .foregroundStyle(Color.purple)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Explore Demo Smart Home")
+                                    .font(.body.weight(.semibold))
+                                    .foregroundStyle(.primary)
+                                
+                                Text("Test Haven with realistic interactive devices, live cards, and charts without a server.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                } header: {
+                    Text("Preview Mode")
+                } footer: {
+                    Text("Explore a fully functional, simulated smart home sandbox with interactive lights, climate, media, and security.")
+                }
             }
             .navigationTitle("Welcome")
             #if os(iOS)

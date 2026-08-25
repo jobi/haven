@@ -7,6 +7,7 @@ import OSLog
 public final class EntityStore {
     public private(set) var entities: [String: HAEntityState] = [:]
     public var lastUpdated: Date = Date()
+    public var isDemoMode: Bool = false
     
     private weak var wsClient: HAWebSocketClient?
     
@@ -16,6 +17,12 @@ public final class EntityStore {
     
     public func setWebSocketClient(_ client: HAWebSocketClient) {
         self.wsClient = client
+    }
+    
+    public func loadDemoData() {
+        self.isDemoMode = true
+        self.entities = DemoDataProvider.shared.generateDemoEntities()
+        self.lastUpdated = Date()
     }
     
     public func entity(for entityId: String) -> HAEntityState? {
@@ -367,6 +374,11 @@ public final class EntityStore {
         target: [String: AnyCodable]? = nil,
         serviceData: [String: AnyCodable]? = nil
     ) async {
+        if isDemoMode {
+            handleDemoServiceCall(domain: domain, service: service, target: target, serviceData: serviceData)
+            return
+        }
+        
         guard let client = wsClient else { return }
         do {
             _ = try await client.sendCommand(
@@ -379,6 +391,143 @@ public final class EntityStore {
         } catch {
             print("[EntityStore] Service call failed: \(error.localizedDescription)")
         }
+    }
+    
+    // MARK: - Demo Mode Service Simulation
+    private func handleDemoServiceCall(
+        domain: String,
+        service: String,
+        target: [String: AnyCodable]?,
+        serviceData: [String: AnyCodable]?
+    ) {
+        let entityId = target?["entity_id"]?.stringValue
+            ?? target?["entity_id"]?.arrayValue?.first?.stringValue
+            ?? serviceData?["entity_id"]?.stringValue
+            ?? ""
+        
+        guard !entityId.isEmpty, var entity = entities[entityId] else { return }
+        var attrs = entity.attributes
+        
+        switch domain {
+        case "light":
+            if service == "toggle" {
+                entity.state = (entity.state == "on") ? "off" : "on"
+            } else if service == "turn_on" {
+                entity.state = "on"
+                if let b = serviceData?["brightness"] { attrs["brightness"] = b }
+                if let hs = serviceData?["hs_color"] { attrs["hs_color"] = hs }
+                if let rgb = serviceData?["rgb_color"] { attrs["rgb_color"] = rgb }
+                if let ct = serviceData?["color_temp"] { attrs["color_temp"] = ct }
+            } else if service == "turn_off" {
+                entity.state = "off"
+            }
+            
+        case "switch":
+            if service == "toggle" {
+                entity.state = (entity.state == "on") ? "off" : "on"
+            } else if service == "turn_on" {
+                entity.state = "on"
+            } else if service == "turn_off" {
+                entity.state = "off"
+            }
+            
+        case "fan":
+            if service == "toggle" {
+                entity.state = (entity.state == "on") ? "off" : "on"
+            } else if service == "turn_on" {
+                entity.state = "on"
+                if let pct = serviceData?["percentage"] { attrs["percentage"] = pct }
+            } else if service == "turn_off" {
+                entity.state = "off"
+            } else if service == "set_percentage" {
+                if let pct = serviceData?["percentage"] {
+                    attrs["percentage"] = pct
+                    entity.state = (pct.intValue == 0) ? "off" : "on"
+                }
+            }
+            
+        case "cover":
+            if service == "open_cover" {
+                entity.state = "open"
+                attrs["current_position"] = AnyCodable(100)
+            } else if service == "close_cover" {
+                entity.state = "closed"
+                attrs["current_position"] = AnyCodable(0)
+            } else if service == "toggle" {
+                let isOpen = (entity.state == "open" || (attrs["current_position"]?.intValue ?? 0) > 0)
+                entity.state = isOpen ? "closed" : "open"
+                attrs["current_position"] = AnyCodable(isOpen ? 0 : 100)
+            } else if service == "set_cover_position" {
+                if let pos = serviceData?["position"] {
+                    attrs["current_position"] = pos
+                    entity.state = (pos.intValue == 0) ? "closed" : "open"
+                }
+            }
+            
+        case "lock":
+            if service == "lock" {
+                entity.state = "locked"
+            } else if service == "unlock" {
+                entity.state = "unlocked"
+            }
+            
+        case "climate":
+            if service == "set_temperature" {
+                if let temp = serviceData?["temperature"] {
+                    attrs["temperature"] = temp
+                }
+                if let high = serviceData?["target_temp_high"] {
+                    attrs["target_temp_high"] = high
+                }
+                if let low = serviceData?["target_temp_low"] {
+                    attrs["target_temp_low"] = low
+                }
+            } else if service == "set_hvac_mode" {
+                if let mode = serviceData?["hvac_mode"]?.stringValue {
+                    entity.state = mode
+                }
+            }
+            
+        case "media_player":
+            if service == "media_play_pause" {
+                entity.state = (entity.state == "playing") ? "paused" : "playing"
+            } else if service == "media_play" {
+                entity.state = "playing"
+            } else if service == "media_pause" {
+                entity.state = "paused"
+            } else if service == "volume_set" {
+                if let vol = serviceData?["volume_level"] { attrs["volume_level"] = vol }
+            } else if service == "volume_mute" {
+                let isMuted = attrs["is_volume_muted"]?.boolValue ?? false
+                attrs["is_volume_muted"] = AnyCodable(!isMuted)
+            }
+            
+        default:
+            if service == "turn_on" {
+                entity.state = "on"
+            } else if service == "turn_off" {
+                entity.state = "off"
+            } else if service == "toggle" {
+                entity.state = (entity.state == "on") ? "off" : "on"
+            }
+        }
+        
+        entities[entityId] = HAEntityState(
+            entityId: entityId,
+            state: entity.state,
+            attributes: attrs,
+            lastChanged: Date(),
+            lastUpdated: Date()
+        )
+        
+        // Dynamically update active lights count badge
+        let activeLights = entities.values.filter { $0.entityId.hasPrefix("light.") && $0.state == "on" }.count
+        if var lightCountEntity = entities["sensor.lights_active_count"] {
+            lightCountEntity.state = "\(activeLights)"
+            entities["sensor.lights_active_count"] = lightCountEntity
+        }
+        
+        self.lastUpdated = Date()
     }
     
     // MARK: - Camera Streaming & Snapshots

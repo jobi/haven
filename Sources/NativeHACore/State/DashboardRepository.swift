@@ -32,6 +32,8 @@ public final class DashboardRepository {
         }
     }
     
+    public var isDemoMode: Bool = false
+    
     public var isLoading: Bool = false
     public var errorMessage: String?
     
@@ -50,6 +52,29 @@ public final class DashboardRepository {
     
     public func setWebSocketClient(_ client: HAWebSocketClient) {
         self.wsClient = client
+    }
+    
+    public func loadDemoDashboards() {
+        self.isDemoMode = true
+        self.isLoading = false
+        self.errorMessage = nil
+        
+        let demoSummary = LovelaceDashboardSummary(
+            id: "demo",
+            urlPath: nil,
+            title: "Demo Smart Home",
+            icon: "mdi:home-variant"
+        )
+        self.availableDashboards = [demoSummary]
+        self.selectedDashboardId = "demo"
+        
+        let config = DemoDataProvider.shared.generateDemoDashboard()
+        self.currentDashboardConfig = config
+        self.sectionViews = config.views.filter { $0.isSectionsType }
+        
+        if let firstView = config.views.first {
+            self.selectedViewId = firstView.id
+        }
     }
     
     private func lastDashboardKey(for serverId: String?) -> String {
@@ -78,6 +103,10 @@ public final class DashboardRepository {
     
     // MARK: - Fetch Dashboards
     public func loadDashboards() async {
+        if isDemoMode {
+            loadDemoDashboards()
+            return
+        }
         guard let client = wsClient else { return }
         isLoading = true
         errorMessage = nil

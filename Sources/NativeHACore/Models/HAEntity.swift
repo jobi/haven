@@ -3,8 +3,8 @@ import Foundation
 public struct HAEntityState: Identifiable, Sendable, Hashable {
     public let entityId: String
     public var id: String { entityId }
-    public let state: String
-    public let attributes: [String: AnyCodable]
+    public var state: String
+    public var attributes: [String: AnyCodable]
     public let lastChanged: Date?
     public let lastUpdated: Date?
     

@@ -21,6 +21,21 @@ public struct ServerConfig: Codable, Identifiable, Sendable, Hashable {
         self.lastConnected = lastConnected
     }
     
+    /// Indicates if this server instance is an offline demo/mock server
+    public var isDemo: Bool {
+        id == ServerConfig.demoServerId || url.host == "demo.haven.local" || id.hasPrefix("demo-")
+    }
+    
+    public static let demoServerId = "demo-haven-server"
+    
+    public static var demoServer: ServerConfig {
+        ServerConfig(
+            id: demoServerId,
+            name: "Demo Smart Home",
+            url: URL(string: "https://demo.haven.local")!
+        )
+    }
+    
     /// Normalizes URL string input by removing trailing slashes and ensuring a scheme
     public static func normalizeURLString(_ input: String) -> URL? {
         var clean = input.trimmingCharacters(in: .whitespacesAndNewlines)

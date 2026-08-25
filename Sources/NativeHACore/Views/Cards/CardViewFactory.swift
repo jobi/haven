@@ -65,6 +65,14 @@ public struct CardViewFactory {
                 onMoreInfo: onMoreInfo
             )
             
+        case "picture-entity", "picture-glance", "camera-preview":
+            PictureEntityCardView(
+                config: try? config.decode(PictureEntityCardConfig.self),
+                rawConfig: config.rawData,
+                entityStore: entityStore,
+                onMoreInfo: onMoreInfo
+            )
+            
         case "badge":
             BadgePillView(
                 config: config,

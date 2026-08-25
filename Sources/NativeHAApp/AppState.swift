@@ -30,6 +30,11 @@ public final class AppState {
             self.isConfigured = true
             self.entityStore.serverURL = server.url
             self.dashboardRepository.serverId = server.id
+            if server.isDemo {
+                self.entityStore.loadDemoData()
+                self.dashboardRepository.loadDemoDashboards()
+                self.connectionState = .connected(haVersion: "2026.8.0 (Demo)")
+            }
         }
         
         setupWebSocketListener()
@@ -54,6 +59,10 @@ public final class AppState {
         await wsClient.setOnStateChanged { [weak self] state in
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
+                if self.activeServer?.isDemo == true {
+                    self.connectionState = .connected(haVersion: "2026.8.0 (Demo)")
+                    return
+                }
                 self.connectionState = state
                 
                 if state.isConnected {
@@ -70,6 +79,18 @@ public final class AppState {
         // Reset stores for clean state
         self.entityStore.serverURL = server.url
         self.dashboardRepository.serverId = server.id
+        
+        if server.isDemo {
+            await wsClient.disconnect()
+            self.entityStore.loadDemoData()
+            self.dashboardRepository.loadDemoDashboards()
+            self.connectionState = .connected(haVersion: "2026.8.0 (Demo)")
+            syncQuickActions()
+            return
+        }
+        
+        self.entityStore.isDemoMode = false
+        self.dashboardRepository.isDemoMode = false
         
         await attachStateListener()
         
@@ -88,6 +109,17 @@ public final class AppState {
         }
         
         syncQuickActions()
+    }
+    
+    public func enableDemoMode() {
+        serverStore.addServer(ServerConfig.demoServer, makeActive: true)
+        self.isConfigured = true
+        self.isShowingAddServerSheet = false
+        syncQuickActions()
+        
+        Task {
+            await connect()
+        }
     }
     
     private func subscribeToEntities() async {
