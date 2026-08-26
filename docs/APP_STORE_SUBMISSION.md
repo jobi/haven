@@ -71,81 +71,50 @@ When submitting or replying to Apple App Review in the **Resolution Center** (or
 
 ---
 
-### App Store Review Resolution Center Reply (Copy & Paste)
+### App Store Review Resolution Center / Notes Field Copy (< 4,000 chars)
 
 ```text
 Dear Apple App Review Team,
 
-Thank you for your review and guidance. Below are the detailed answers to each of the 7 requested items regarding Haven (org.bilien.haven), along with instructions for testing the app:
+Below are our detailed responses to the 7 requested items for Haven (org.bilien.haven):
 
---------------------------------------------------------------------------------
 1. SCREEN RECORDING DEMONSTRATING FUNCTIONALITY
---------------------------------------------------------------------------------
-A screen recording captured on a physical iPhone running iOS is attached to this submission. The recording demonstrates:
-• Launching the app on a fresh install.
-• Accessing the app immediately via the built-in "Demo Smart Home" (no server/hardware required).
-• Interacting with core smart home controls: toggling lights, switches, locks, and appliances.
-• Adjusting light brightness, color temperature (Kelvin), and RGB color palettes.
-• Viewing 24-hour interactive historical sensor charts (temperature/humidity).
-• Viewing live security camera feeds with real-time HUD overlays and controls.
-• Accessing Settings, multi-server management, and connection options.
+A video captured on a physical iPhone is attached demonstrating: fresh launch, Demo Smart Home access, controlling lights/switches/locks/appliances, light brightness & RGB/Kelvin adjustments, 24h interactive sensor history charts, live camera feeds with HUD overlays, and multi-server settings.
+• Account Registration/Login: No proprietary account system. Connects directly to self-hosted Home Assistant servers or runs offline in Demo Mode.
+• Paid Content/IAPs: None (100% free app).
+• User-Generated Content: None (personal smart home utility).
+• Sensitive Permissions: None requested (no camera, mic, contacts, location, or ATT required).
 
-Regarding specific flows:
-• Account registration / login: Haven does not operate a proprietary user account system. It connects directly to the user's self-hosted Home Assistant server via standard OAuth2 / Long-Lived Access Tokens, or runs entirely offline in Demo Mode.
-• Paid content / In-App Purchases: None. The app is completely free with no paywalled content, subscriptions, or IAPs.
-• User-generated content / moderation: None. The app is a local controller utility for personal smart home hardware.
-• Sensitive device permissions: None requested (no camera, microphone, contacts, location, or App Tracking Transparency required).
-
---------------------------------------------------------------------------------
 2. TESTED DEVICE MODELS & OPERATING SYSTEMS
---------------------------------------------------------------------------------
-The app was extensively tested on the following physical devices and simulators before submission:
-• Physical Device: iPhone 16 Pro (iOS 18 / iOS 26 Darwin runtime)
-• Simulators:
-  - iPhone 16 Pro, iPhone 17 Pro, iPhone SE (3rd Gen) (iOS 17.0 - 26.0)
-  - iPad Pro 13-inch (M4), iPad Air 11-inch (M3) (iPadOS 17.0 - 26.0)
+• Physical Device: iPhone 16 Pro (iOS 18)
+• Simulators: iPhone 16 Pro, iPhone 17 Pro, iPhone SE (3rd Gen) (iOS 17.0 - 18.0), iPad Pro 13-inch (M4), iPad Air 11-inch (M3) (iPadOS 17.0 - 18.0).
 
---------------------------------------------------------------------------------
-3. APP FUNCTIONS, TARGET AUDIENCE, AND PROBLEM SOLVED
---------------------------------------------------------------------------------
-• Target Audience: Homeowners, IoT enthusiasts, and users of the open-source Home Assistant home automation ecosystem.
-• Problem Solved: Standard mobile web interfaces for Home Assistant can suffer from higher latency, slower render performance, and higher battery consumption.
-• Value Provided: Haven provides a 100% native, ultra-fast SwiftUI client that communicates directly with Home Assistant instances over WebSocket and REST APIs. It offers instant sub-second response times, fluid native gesture controls, live WebRTC camera streaming, multi-server management, and responsive layouts for both iPhone and iPad with zero cloud middlemen or data collection.
+3. APP FUNCTIONS, TARGET AUDIENCE & VALUE
+• Target Audience: Users of the open-source Home Assistant smart home platform.
+• Problem Solved: Web-based smart home dashboards can experience high latency and suboptimal mobile touch response.
+• Value: Haven is a native SwiftUI client connecting directly via WebSocket/REST with sub-second response times, interactive charts, live WebRTC streaming, and multi-server support without cloud middlemen or tracking.
 
---------------------------------------------------------------------------------
-4. SETUP & ACCESS INSTRUCTIONS (EASY TESTING - NO SERVER REQUIRED)
---------------------------------------------------------------------------------
-The app includes a built-in "Demo Smart Home" sandbox specifically engineered for Apple Reviewers to exercise all features without needing physical smart home hardware or a self-hosted server:
+4. SETUP & TESTING INSTRUCTIONS (NO SERVER REQUIRED)
+The app includes a built-in "Demo Smart Home" sandbox for App Review without needing external hardware:
+1. Launch Haven.
+2. Tap "Explore Demo Smart Home (No Server Required)".
+3. An interactive smart home loads immediately with 30+ entities across 3 views:
+   • Home: Toggle lights, fans, locks, appliances; tap "Living Room Ceiling" for brightness/color controls; tap "Living Room Temperature" for 24h history charts.
+   • Security: View live camera feeds with motion detection bounding boxes.
+   • Settings (gear icon): Multi-server switcher and configuration.
+(Optional Live Server): Tap Settings -> "Add Another Server" to connect to any Home Assistant instance via OAuth2 or LLAT.
 
-1. Launch Haven on the device.
-2. On the initial screen, tap:
-   "Explore Demo Smart Home (No Server Required)"
-3. The app will immediately load an interactive smart home with 30+ simulated entities across 3 dashboard views:
-   • Home Overview: Tap tiles to toggle lights, fans, espresso machine, blinds, and locks.
-   • Light & Entity Controls: Tap "Living Room Ceiling" to open detailed controls (brightness slider, color temperature, color presets).
-   • Sensor History Charts: Tap "Living Room Temperature" to view the 24-hour interactive history graph and statistics.
-   • Security & Live Cameras: Tap the "Security" tab to view real-time live camera streams with motion detection bounding boxes.
-   • Multi-Server Management: Tap the Settings gear icon in the top toolbar to view server switching and configuration.
+5. EXTERNAL SERVICES, TOOLS & PLATFORMS
+• Home Assistant WebSocket/REST API: Direct connection to the user's private server.
+• WebRTC/RTSP: Direct peer-to-server video streaming.
+• Third-Party Trackers/Cloud: NONE. No backend servers, no analytics, no ads, no payment processors.
 
-(Optional Live Server Testing): Reviewers wishing to test with a physical server can tap Settings -> "Add Another Server" and enter any standard Home Assistant URL with local or OAuth2 credentials.
-
---------------------------------------------------------------------------------
-5. EXTERNAL SERVICES, TOOLS, AND PLATFORMS
---------------------------------------------------------------------------------
-• Home Assistant WebSocket & REST API: Standard open-source communication protocol (/api/websocket) running directly on the user's private server.
-• WebRTC / RTSP Streaming: Direct peer-to-peer or server-direct video streaming for local camera entities.
-• External Third-Party Cloud Services / Trackers: NONE. Haven uses no third-party backend servers, no analytics/telemetry SDKs, no advertising frameworks, and no payment processors. All network communication is strictly peer-to-server between the user's iOS device and their private Home Assistant instance.
-
---------------------------------------------------------------------------------
 6. REGIONAL DIFFERENCES & GLOBAL AVAILABILITY
---------------------------------------------------------------------------------
-Haven functions consistently across all geographic regions worldwide without regional restrictions, geofencing, or localized feature limitations. Temperature units (°C/°F), dates, and time formats automatically adapt to the user's device locale and server configuration.
+Functions consistently across all regions without restrictions or geofencing. Automatically adapts temperature units (°C/°F) and time formats to device locale.
 
---------------------------------------------------------------------------------
 7. REGULATORY & THIRD-PARTY MATERIAL DISCLOSURE
---------------------------------------------------------------------------------
-• Regulated Industries: Haven does not operate in any regulated industry (such as banking, healthcare, gambling, or pharmaceuticals).
-• Third-Party Material: Haven is an independent open-source client (Apache License 2.0) for the open-source Home Assistant platform. All bundled iconography is from Material Design Icons (licensed under Apache 2.0 / Pictogrammers Free License). No proprietary or protected third-party assets are used without authorization.
+• Regulated Industries: None (utility for personal home automation).
+• Third-Party Material: Haven is an open-source client (Apache 2.0). Bundled icons are Material Design Icons (Apache 2.0 / Pictogrammers Free License). No unauthorized third-party IP used.
 ```
 
 ---
