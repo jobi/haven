@@ -109,35 +109,78 @@ public actor HistoryService {
         hours: Int
     ) -> [HistoryDataPoint] {
         let baseVal = currentValue ?? 22.0
-        let count = min(30, max(12, hours * 2))
-        let step = Double(hours * 3600) / Double(count)
+        
+        // Count of samples: 48 points for 24h (every 30m), 36 for 12h (every 20m), 24 for 6h (every 15m)
+        let count = min(48, max(24, hours * 2))
+        let step = Double(hours * 3600) / Double(count - 1)
         let now = Date()
+        
+        // Deterministic hash seed from entityId
+        var hash: UInt32 = 5381
+        for byte in entityId.utf8 {
+            hash = ((hash << 5) &+ hash) &+ UInt32(byte)
+        }
+        
+        let phi1 = (Double(hash & 0xFF) / 255.0) * 2.0 * .pi
+        let phi2 = (Double((hash >> 8) & 0xFF) / 255.0) * 2.0 * .pi
+        let phi3 = (Double((hash >> 16) & 0xFF) / 255.0) * 2.0 * .pi
+        
+        let lowerId = entityId.lowercased()
+        let isTemp = lowerId.contains("temp")
+        let isHumidity = lowerId.contains("humidity")
+        let isPower = lowerId.contains("power") || lowerId.contains("watt") || lowerId.contains("energy")
+        let isSolar = lowerId.contains("solar")
+        
+        let ampScale: Double
+        if isSolar {
+            ampScale = 0.50
+        } else if isPower {
+            ampScale = 0.30
+        } else if isHumidity {
+            ampScale = 0.12
+        } else if isTemp {
+            ampScale = 0.06
+        } else {
+            ampScale = 0.08
+        }
+        
+        let a1 = max(0.5, baseVal * ampScale)
+        let a2 = a1 * 0.35
+        let a3 = a1 * 0.15
         
         var points: [HistoryDataPoint] = []
         for i in 0..<count {
             let offset = Double(count - 1 - i) * step
             let date = now.addingTimeInterval(-offset)
             
-            // Subtle diurnal temperature/pressure oscillation wave
-            let progress = Double(i) / Double(count)
-            let wave = sin(progress * .pi * 2.0 - 1.0) * (baseVal * 0.08)
-            let jitter = Double((i * 17) % 7 - 3) * 0.1
-            let simulatedVal = max(0.0, baseVal + wave + jitter)
+            // deltaT <= 0 in hours relative to now (0 = now, -2.5 = 2.5 hours ago)
+            let deltaT = -offset / 3600.0
+            
+            // Harmonic wave anchored continuously at deltaT = 0 (so wave(0) == 0 with no discontinuity)
+            let w1 = a1 * (sin((2.0 * .pi * deltaT / 24.0) + phi1) - sin(phi1))
+            let w2 = a2 * (sin((2.0 * .pi * deltaT / 8.0) + phi2) - sin(phi2))
+            let w3 = a3 * (sin((2.0 * .pi * deltaT / 2.5) + phi3) - sin(phi3))
+            
+            var simulatedVal = baseVal + w1 + w2 + w3
+            
+            // Power / Solar can have realistic burst activity
+            if isPower {
+                // Occasional power spikes (e.g. appliances cycling)
+                let spikeFreq = sin((2.0 * .pi * deltaT / 3.0) + phi2)
+                if spikeFreq > 0.7 {
+                    simulatedVal += a1 * 0.8 * (spikeFreq - 0.7)
+                }
+            } else if isSolar {
+                simulatedVal = max(0.0, simulatedVal)
+            }
+            
+            simulatedVal = max(0.0, simulatedVal)
             
             points.append(HistoryDataPoint(
                 timestamp: date,
                 value: simulatedVal,
                 stateString: String(format: "%.1f", simulatedVal)
             ))
-        }
-        
-        // Ensure the last point matches the live value
-        if let last = points.last {
-            points[points.count - 1] = HistoryDataPoint(
-                timestamp: now,
-                value: baseVal,
-                stateString: String(format: "%.1f", baseVal)
-            )
         }
         
         return points
