@@ -3,23 +3,23 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5C713361DBD8E787B3566A53 /* NativeHAApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A629E1361C2793B49FC3E659 /* NativeHAApp.swift */; };
+		E6A1036E55DF4AE59FEDE0CC /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 552CF13A1C9C15E69983C8E3 /* AppState.swift */; };
+		C37CA8A3A815570399B8106C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B81B3B18317C0A73E4AFBE48 /* Assets.xcassets */; };
+		76CD0B388DA41E5335735B3C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0E07E2E6C64FAB9EAC5CB9A3 /* PrivacyInfo.xcprivacy */; };
 		0D2EB401D0691D8718413B39 /* NativeHACore in Frameworks */ = {isa = PBXBuildFile; productRef = 7EEFF35FC4A06A1FE4BDCE98 /* NativeHACore */; };
-		5C713361DBD8E787B3566A53 /* Sources/NativeHAApp/NativeHAApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A629E1361C2793B49FC3E659 /* Sources/NativeHAApp/NativeHAApp.swift */; };
-		76CD0B388DA41E5335735B3C /* Sources/NativeHAApp/PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0E07E2E6C64FAB9EAC5CB9A3 /* Sources/NativeHAApp/PrivacyInfo.xcprivacy */; };
-		C37CA8A3A815570399B8106C /* Sources/NativeHAApp/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B81B3B18317C0A73E4AFBE48 /* Sources/NativeHAApp/Assets.xcassets */; };
-		E6A1036E55DF4AE59FEDE0CC /* Sources/NativeHAApp/AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 552CF13A1C9C15E69983C8E3 /* Sources/NativeHAApp/AppState.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A629E1361C2793B49FC3E659 /* NativeHAApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/NativeHAApp/NativeHAApp.swift"; sourceTree = "<group>"; };
+		552CF13A1C9C15E69983C8E3 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/NativeHAApp/AppState.swift"; sourceTree = "<group>"; };
+		B81B3B18317C0A73E4AFBE48 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Sources/NativeHAApp/Assets.xcassets"; sourceTree = "<group>"; };
+		0E07E2E6C64FAB9EAC5CB9A3 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "Sources/NativeHAApp/PrivacyInfo.xcprivacy"; sourceTree = "<group>"; };
 		07E2B197A072E9FBB810D46D /* Haven.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Haven.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		0E07E2E6C64FAB9EAC5CB9A3 /* Sources/NativeHAApp/PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Sources/NativeHAApp/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		552CF13A1C9C15E69983C8E3 /* Sources/NativeHAApp/AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/NativeHAApp/AppState.swift; sourceTree = "<group>"; };
-		A629E1361C2793B49FC3E659 /* Sources/NativeHAApp/NativeHAApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/NativeHAApp/NativeHAApp.swift; sourceTree = "<group>"; };
-		B81B3B18317C0A73E4AFBE48 /* Sources/NativeHAApp/Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Sources/NativeHAApp/Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,10 +37,10 @@
 		0A85897F1A32FE9B91C081CD = {
 			isa = PBXGroup;
 			children = (
-				A629E1361C2793B49FC3E659 /* Sources/NativeHAApp/NativeHAApp.swift */,
-				552CF13A1C9C15E69983C8E3 /* Sources/NativeHAApp/AppState.swift */,
-				B81B3B18317C0A73E4AFBE48 /* Sources/NativeHAApp/Assets.xcassets */,
-				0E07E2E6C64FAB9EAC5CB9A3 /* Sources/NativeHAApp/PrivacyInfo.xcprivacy */,
+				A629E1361C2793B49FC3E659 /* NativeHAApp.swift */,
+				552CF13A1C9C15E69983C8E3 /* AppState.swift */,
+				B81B3B18317C0A73E4AFBE48 /* Assets.xcassets */,
+				0E07E2E6C64FAB9EAC5CB9A3 /* PrivacyInfo.xcprivacy */,
 				B88D7E26791946AEFDCC8BB7 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -91,7 +91,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 9B7A4A2B574091F58331C211 /* Build configuration list for PBXProject "NativeHA" */;
+			buildConfigurationList = 9B7A4A2B574091F58331C211 /* Build configuration list for PBXProject "Haven" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -101,7 +101,7 @@
 			);
 			mainGroup = 0A85897F1A32FE9B91C081CD;
 			packageReferences = (
-				6886368DFE17F4D92C10A694 /* XCLocalSwiftPackageReference "." */,
+				6886368DFE17F4D92C10A694 /* LocalPackageData */,
 			);
 			productRefGroup = B88D7E26791946AEFDCC8BB7 /* Products */;
 			projectDirPath = "";
@@ -117,8 +117,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C37CA8A3A815570399B8106C /* Sources/NativeHAApp/Assets.xcassets in Resources */,
-				76CD0B388DA41E5335735B3C /* Sources/NativeHAApp/PrivacyInfo.xcprivacy in Resources */,
+				C37CA8A3A815570399B8106C /* Assets.xcassets in Resources */,
+				76CD0B388DA41E5335735B3C /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -129,12 +129,27 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5C713361DBD8E787B3566A53 /* Sources/NativeHAApp/NativeHAApp.swift in Sources */,
-				E6A1036E55DF4AE59FEDE0CC /* Sources/NativeHAApp/AppState.swift in Sources */,
+				5C713361DBD8E787B3566A53 /* NativeHAApp.swift in Sources */,
+				E6A1036E55DF4AE59FEDE0CC /* AppState.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		6886368DFE17F4D92C10A694 /* LocalPackageData */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7EEFF35FC4A06A1FE4BDCE98 /* NativeHACore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6886368DFE17F4D92C10A694 /* LocalPackageData */;
+			productName = NativeHACore;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		2E4E6CCF5D6EF365E5C97DDB /* Debug */ = {
@@ -163,58 +178,6 @@
 			};
 			name = Debug;
 		};
-		75C43E90EFD001E36BF60147 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = 9BLTG2R6JP;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Sources/NativeHAApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		763EE87794306FA0DE784359 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = 9BLTG2R6JP;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Sources/NativeHAApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 		7BE66DFF231D03044D5C4C4E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -235,9 +198,70 @@
 			};
 			name = Release;
 		};
+		75C43E90EFD001E36BF60147 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = 5RN24MB5AH;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Sources/NativeHAApp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		763EE87794306FA0DE784359 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = 5RN24MB5AH;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Sources/NativeHAApp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		9B7A4A2B574091F58331C211 /* Build configuration list for PBXProject "Haven" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2E4E6CCF5D6EF365E5C97DDB /* Debug */,
+				7BE66DFF231D03044D5C4C4E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		4977ED30DDFEF48DA821F2BF /* Build configuration list for PBXNativeTarget "Haven" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -247,31 +271,8 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9B7A4A2B574091F58331C211 /* Build configuration list for PBXProject "NativeHA" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				2E4E6CCF5D6EF365E5C97DDB /* Debug */,
-				7BE66DFF231D03044D5C4C4E /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		6886368DFE17F4D92C10A694 /* XCLocalSwiftPackageReference "." */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = .;
-		};
-/* End XCLocalSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		7EEFF35FC4A06A1FE4BDCE98 /* NativeHACore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 6886368DFE17F4D92C10A694 /* XCLocalSwiftPackageReference "." */;
-			productName = NativeHACore;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = BE64FDB4FF36DA56318DDB7F /* Project object */;
 }

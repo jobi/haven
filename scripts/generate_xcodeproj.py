@@ -280,7 +280,7 @@ def main():
 \t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 \t\t\t\tASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 \t\t\t\tCODE_SIGN_STYLE = Automatic;
-\t\t\t\tCURRENT_PROJECT_VERSION = 1;
+\t\t\t\tCURRENT_PROJECT_VERSION = 2;
 \t\t\t\tDEVELOPMENT_ASSET_PATHS = "";
 \t\t\t\tDEVELOPMENT_TEAM = 5RN24MB5AH;
 \t\t\t\tENABLE_PREVIEWS = YES;
@@ -291,7 +291,7 @@ def main():
 \t\t\t\t\t"$(inherited)",
 \t\t\t\t\t"@executable_path/Frameworks",
 \t\t\t\t);
-\t\t\t\tMARKETING_VERSION = 1.0.0;
+\t\t\t\tMARKETING_VERSION = 1.0.1;
 \t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven;
 \t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";
 \t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;
@@ -306,7 +306,7 @@ def main():
 \t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 \t\t\t\tASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 \t\t\t\tCODE_SIGN_STYLE = Automatic;
-\t\t\t\tCURRENT_PROJECT_VERSION = 1;
+\t\t\t\tCURRENT_PROJECT_VERSION = 2;
 \t\t\t\tDEVELOPMENT_ASSET_PATHS = "";
 \t\t\t\tDEVELOPMENT_TEAM = 5RN24MB5AH;
 \t\t\t\tENABLE_PREVIEWS = YES;
@@ -317,7 +317,7 @@ def main():
 \t\t\t\t\t"$(inherited)",
 \t\t\t\t\t"@executable_path/Frameworks",
 \t\t\t\t);
-\t\t\t\tMARKETING_VERSION = 1.0.0;
+\t\t\t\tMARKETING_VERSION = 1.0.1;
 \t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven;
 \t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";
 \t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;
