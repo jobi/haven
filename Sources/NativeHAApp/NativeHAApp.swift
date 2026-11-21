@@ -46,6 +46,7 @@ struct NativeHAApp: App {
     #if os(iOS)
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     #endif
+    @Environment(\.scenePhase) private var scenePhase
     @State private var appState = AppState()
     
     var body: some Scene {
@@ -117,6 +118,18 @@ struct NativeHAApp: App {
             }
             .onOpenURL { url in
                 appState.handleDeepLink(url)
+            }
+            .onChange(of: scenePhase) { oldPhase, newPhase in
+                switch newPhase {
+                case .background:
+                    appState.handleDidEnterBackground()
+                case .active:
+                    if oldPhase == .background || oldPhase == .inactive {
+                        appState.handleWillEnterForeground()
+                    }
+                default:
+                    break
+                }
             }
             #if os(iOS)
             .onReceive(NotificationCenter.default.publisher(for: .havenDidPerformQuickAction)) { notification in

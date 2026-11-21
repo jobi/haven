@@ -1,4 +1,5 @@
 import Foundation
+import Network
 import OSLog
 
 public actor HAWebSocketClient {
@@ -14,9 +15,16 @@ public actor HAWebSocketClient {
     private var stringSubscriptionHandlers: [String: @Sendable (AnyCodable) async -> Void] = [:]
     
     private var isIntentionalDisconnect: Bool = false
+    private var isBackgrounded: Bool = false
     private var reconnectAttempt: Int = 0
     private var heartbeatTask: Task<Void, Never>?
+    private var pongTimeoutTask: Task<Void, Never>?
     private var receiveTask: Task<Void, Never>?
+    private var reconnectTask: Task<Void, Never>?
+    private var waitingForPong: Bool = false
+    
+    private var pathMonitor: NWPathMonitor?
+    private var isNetworkSatisfied: Bool = true
     
     public private(set) var state: HAConnectionState = .disconnected {
         didSet {
@@ -38,9 +46,78 @@ public actor HAWebSocketClient {
         self.serverConfig = server
         self.tokenProvider = tokenProvider
         self.isIntentionalDisconnect = false
+        self.isBackgrounded = false
         self.reconnectAttempt = 0
+        startNetworkMonitorIfNeeded()
         
         await performConnect()
+    }
+    
+    private func startNetworkMonitorIfNeeded() {
+        guard pathMonitor == nil else { return }
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { [weak self] path in
+            let satisfied = (path.status == .satisfied)
+            Task { [weak self] in
+                await self?.handleNetworkPathChanged(isSatisfied: satisfied)
+            }
+        }
+        monitor.start(queue: DispatchQueue(label: "org.bilien.haven.networkmonitor"))
+        self.pathMonitor = monitor
+    }
+    
+    private func handleNetworkPathChanged(isSatisfied: Bool) async {
+        let wasSatisfied = isNetworkSatisfied
+        isNetworkSatisfied = isSatisfied
+        
+        if isSatisfied && !wasSatisfied && !isBackgrounded && !isIntentionalDisconnect && serverConfig != nil && !state.isConnected {
+            await reconnectNow()
+        }
+    }
+    
+    /// Cleanly suspends the WebSocket when the app enters the background so the OS
+    /// does not leave a half-open socket or exhaust reconnect attempts while suspended.
+    public func pauseForBackground() {
+        isBackgrounded = true
+        cleanupConnection(closeCode: .goingAway)
+        if !isIntentionalDisconnect && serverConfig != nil {
+            state = .disconnected
+        }
+    }
+    
+    /// Immediately restores or verifies the WebSocket connection when returning to the foreground.
+    public func resumeFromBackground() async {
+        let wasBackgrounded = isBackgrounded
+        isBackgrounded = false
+        guard !isIntentionalDisconnect, serverConfig != nil else { return }
+        
+        if state.isConnected {
+            await verifyConnection()
+        } else if case .connecting = state, !wasBackgrounded {
+            // Already actively connecting (e.g. initial app launch)
+            return
+        } else if case .authenticating = state, !wasBackgrounded {
+            return
+        } else {
+            await reconnectNow()
+        }
+    }
+    
+    public func reconnectNow() async {
+        guard !isIntentionalDisconnect, !isBackgrounded, serverConfig != nil else { return }
+        reconnectTask?.cancel()
+        reconnectTask = nil
+        reconnectAttempt = 0
+        await performConnect()
+    }
+    
+    /// Sends a heartbeat ping and verifies a response arrives promptly; reconnects if the socket is dead.
+    public func verifyConnection() async {
+        guard state.isConnected, let task = webSocketTask else {
+            await reconnectNow()
+            return
+        }
+        await sendPing(on: task, timeoutSeconds: 3)
     }
     
     private func performConnect() async {
@@ -74,51 +151,55 @@ public actor HAWebSocketClient {
             return
         }
         
-        receiveTask?.cancel()
-        receiveTask = nil
-        heartbeatTask?.cancel()
-        heartbeatTask = nil
+        cleanupConnection(closeCode: .normalClosure)
         
-        webSocketTask?.cancel(with: .normalClosure, reason: nil)
-        webSocketTask = session.webSocketTask(with: wsURL)
-        webSocketTask?.resume()
+        let task = session.webSocketTask(with: wsURL)
+        webSocketTask = task
+        task.resume()
         
-        startReceiveLoop()
+        startReceiveLoop(for: task)
     }
     
-    public func disconnect() {
-        isIntentionalDisconnect = true
+    private func cleanupConnection(closeCode: URLSessionWebSocketTask.CloseCode) {
+        reconnectTask?.cancel()
+        reconnectTask = nil
         heartbeatTask?.cancel()
         heartbeatTask = nil
+        pongTimeoutTask?.cancel()
+        pongTimeoutTask = nil
         receiveTask?.cancel()
         receiveTask = nil
+        waitingForPong = false
         
-        webSocketTask?.cancel(with: .normalClosure, reason: nil)
+        webSocketTask?.cancel(with: closeCode, reason: nil)
         webSocketTask = nil
         
-        // Cancel all pending continuations
         for (_, cont) in pendingContinuations {
             cont.resume(throwing: HAClientError.disconnected)
         }
         pendingContinuations.removeAll()
         subscriptionHandlers.removeAll()
-        
+        stringSubscriptionHandlers.removeAll()
+    }
+    
+    public func disconnect() {
+        isIntentionalDisconnect = true
+        cleanupConnection(closeCode: .normalClosure)
         state = .disconnected
     }
     
     // MARK: - Message Loop
-    private func startReceiveLoop() {
+    private func startReceiveLoop(for task: URLSessionWebSocketTask) {
         receiveTask?.cancel()
         receiveTask = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self = self else { break }
                 do {
-                    guard let task = await self.getCurrentWebSocketTask() else { break }
                     let message = try await task.receive()
                     await self.handleWebSocketMessage(message)
                 } catch {
                     if !Task.isCancelled {
-                        await self.handleConnectionDrop(error: error)
+                        await self.handleConnectionDrop(for: task, error: error)
                     }
                     break
                 }
@@ -126,11 +207,14 @@ public actor HAWebSocketClient {
         }
     }
     
-    private func getCurrentWebSocketTask() -> URLSessionWebSocketTask? {
-        return webSocketTask
-    }
-    
     private func handleWebSocketMessage(_ message: URLSessionWebSocketTask.Message) async {
+        // Any message received confirms the socket is alive
+        if waitingForPong {
+            waitingForPong = false
+            pongTimeoutTask?.cancel()
+            pongTimeoutTask = nil
+        }
+        
         let data: Data
         switch message {
         case .data(let d):
@@ -230,14 +314,27 @@ public actor HAWebSocketClient {
             return
         }
         
+        let currentTask = webSocketTask
         do {
             let token = try await tokenProvider()
             let authMsg = HAAuthMessage(accessToken: token)
             let data = try JSONEncoder().encode(authMsg)
             guard let jsonString = String(data: data, encoding: .utf8) else { return }
-            try await webSocketTask?.send(.string(jsonString))
+            guard let task = currentTask, task === webSocketTask else { return }
+            try await task.send(.string(jsonString))
+        } catch let authError as HAAuthManager.AuthError {
+            switch authError {
+            case .noTokensFound:
+                state = .failed(error: authError.localizedDescription)
+            case .tokenRefreshFailed(let underlying):
+                if underlying is HARestClient.NetworkError {
+                    state = .failed(error: authError.localizedDescription)
+                } else {
+                    await handleConnectionDrop(for: currentTask, error: authError)
+                }
+            }
         } catch {
-            state = .failed(error: "Failed to retrieve access token: \(error.localizedDescription)")
+            await handleConnectionDrop(for: currentTask, error: error)
         }
     }
     
@@ -246,34 +343,77 @@ public actor HAWebSocketClient {
         heartbeatTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
-                guard let self = self else { break }
-                await self.sendPing()
+                guard !Task.isCancelled, let self = self else { break }
+                await self.sendScheduledPing()
             }
         }
     }
     
-    private func sendPing() async {
+    private func sendScheduledPing() async {
+        guard state.isConnected, let task = webSocketTask else { return }
+        await sendPing(on: task, timeoutSeconds: 5)
+    }
+    
+    private func sendPing(on task: URLSessionWebSocketTask, timeoutSeconds: UInt64) async {
         let seq = nextSequenceId()
         let pingDict: [String: AnyCodable] = [
             "id": AnyCodable(seq),
             "type": AnyCodable("ping")
         ]
-        if let data = try? JSONEncoder().encode(pingDict), let str = String(data: data, encoding: .utf8) {
-            try? await webSocketTask?.send(.string(str))
+        guard let data = try? JSONEncoder().encode(pingDict),
+              let str = String(data: data, encoding: .utf8) else { return }
+        
+        waitingForPong = true
+        pongTimeoutTask?.cancel()
+        pongTimeoutTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: timeoutSeconds * 1_000_000_000)
+            guard !Task.isCancelled, let self = self else { return }
+            await self.handlePongTimeout(for: task)
+        }
+        
+        do {
+            try await task.send(.string(str))
+        } catch {
+            waitingForPong = false
+            pongTimeoutTask?.cancel()
+            pongTimeoutTask = nil
+            await handleConnectionDrop(for: task, error: error)
         }
     }
     
-    private func handleConnectionDrop(error: Error?) async {
-        guard !isIntentionalDisconnect else { return }
+    private func handlePongTimeout(for task: URLSessionWebSocketTask) async {
+        guard waitingForPong, task === webSocketTask else { return }
+        waitingForPong = false
+        await handleConnectionDrop(for: task, error: HAClientError.disconnected)
+    }
+    
+    private func handleConnectionDrop(for task: URLSessionWebSocketTask?, error: Error?) async {
+        guard !isIntentionalDisconnect, !isBackgrounded else { return }
+        if let task = task, let current = webSocketTask, task !== current {
+            return
+        }
+        guard reconnectTask == nil else { return }
+        
+        heartbeatTask?.cancel()
+        heartbeatTask = nil
+        pongTimeoutTask?.cancel()
+        pongTimeoutTask = nil
         
         reconnectAttempt += 1
-        let delay = min(30.0, pow(2.0, Double(reconnectAttempt)))
+        let delay = min(30.0, pow(2.0, Double(reconnectAttempt - 1)))
         state = .reconnecting(attempt: reconnectAttempt, delay: delay)
         
-        try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-        if !isIntentionalDisconnect && !Task.isCancelled {
-            await performConnect()
+        reconnectTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            guard !Task.isCancelled, let self = self else { return }
+            await self.executeScheduledReconnect()
         }
+    }
+    
+    private func executeScheduledReconnect() async {
+        reconnectTask = nil
+        guard !isIntentionalDisconnect, !isBackgrounded else { return }
+        await performConnect()
     }
     
     // MARK: - Command Execution

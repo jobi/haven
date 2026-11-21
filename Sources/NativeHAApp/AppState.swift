@@ -133,6 +133,20 @@ public final class AppState {
         syncQuickActions()
     }
     
+    public func handleDidEnterBackground() {
+        guard isConfigured, activeServer?.isDemo != true else { return }
+        Task {
+            await wsClient.pauseForBackground()
+        }
+    }
+    
+    public func handleWillEnterForeground() {
+        guard isConfigured, activeServer?.isDemo != true else { return }
+        Task {
+            await wsClient.resumeFromBackground()
+        }
+    }
+    
     public func enableDemoMode() {
         serverStore.addServer(ServerConfig.demoServer, makeActive: true)
         self.isConfigured = true
