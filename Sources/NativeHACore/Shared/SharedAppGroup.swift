@@ -7,7 +7,7 @@ public enum SharedAppGroup {
     public static let keychainAccessGroupSuffix = "org.bilien.haven"
     
     private static let legacyEntitySnapshotsKey = "haven_widget_entity_snapshots_v1"
-    private static let perServerSnapshotsPrefix = "haven_widget_entity_snapshots_v2_"
+    private static let perServerSnapshotsPrefix = "haven_widget_entity_snapshots_v5_"
     private static let demoOverridesKey = "haven_widget_demo_overrides_v1"
     
     public static var userDefaults: UserDefaults {
@@ -107,6 +107,20 @@ public struct WidgetEntitySnapshot: Codable, Sendable, Equatable, Identifiable, 
     public let state: String
     public let icon: String?
     public let unitOfMeasurement: String?
+    public let options: [String]?
+    public let currentOption: String?
+    public let currentTemperature: Double?
+    public let targetTemperature: Double?
+    public let targetTempLow: Double?
+    public let targetTempHigh: Double?
+    public let hvacAction: String?
+    public let hvacModes: [String]?
+    public let temperatureStep: Double?
+    public let mediaTitle: String?
+    public let mediaArtist: String?
+    public let entityPicture: String?
+    public let volumeLevel: Double?
+    public let isVolumeMuted: Bool?
     public let lastUpdated: Date
     
     public init(
@@ -117,6 +131,20 @@ public struct WidgetEntitySnapshot: Codable, Sendable, Equatable, Identifiable, 
         state: String,
         icon: String? = nil,
         unitOfMeasurement: String? = nil,
+        options: [String]? = nil,
+        currentOption: String? = nil,
+        currentTemperature: Double? = nil,
+        targetTemperature: Double? = nil,
+        targetTempLow: Double? = nil,
+        targetTempHigh: Double? = nil,
+        hvacAction: String? = nil,
+        hvacModes: [String]? = nil,
+        temperatureStep: Double? = nil,
+        mediaTitle: String? = nil,
+        mediaArtist: String? = nil,
+        entityPicture: String? = nil,
+        volumeLevel: Double? = nil,
+        isVolumeMuted: Bool? = nil,
         lastUpdated: Date = Date()
     ) {
         self.entityId = entityId
@@ -126,6 +154,20 @@ public struct WidgetEntitySnapshot: Codable, Sendable, Equatable, Identifiable, 
         self.state = state
         self.icon = icon
         self.unitOfMeasurement = unitOfMeasurement
+        self.options = options
+        self.currentOption = currentOption
+        self.currentTemperature = currentTemperature
+        self.targetTemperature = targetTemperature
+        self.targetTempLow = targetTempLow
+        self.targetTempHigh = targetTempHigh
+        self.hvacAction = hvacAction
+        self.hvacModes = hvacModes
+        self.temperatureStep = temperatureStep
+        self.mediaTitle = mediaTitle
+        self.mediaArtist = mediaArtist
+        self.entityPicture = entityPicture
+        self.volumeLevel = volumeLevel
+        self.isVolumeMuted = isVolumeMuted
         self.lastUpdated = lastUpdated
     }
     
@@ -137,6 +179,55 @@ public struct WidgetEntitySnapshot: Codable, Sendable, Equatable, Identifiable, 
         self.state = entity.state
         self.icon = entity.icon
         self.unitOfMeasurement = entity.unitOfMeasurement
+        
+        let extractedOptions =
+            entity.attributes["options"]?.arrayValue?.compactMap(\.stringValue) ??
+            entity.attributes["activity_list"]?.arrayValue?.compactMap(\.stringValue)
+        self.options = (extractedOptions?.isEmpty == false) ? extractedOptions : nil
+        
+        if entity.domain == "remote" {
+            self.currentOption = entity.attributes["current_activity"]?.stringValue ?? entity.state
+        } else if self.options != nil {
+            self.currentOption = entity.state
+        } else {
+            self.currentOption = nil
+        }
+        
+        if entity.domain == "climate" {
+            self.currentTemperature = entity.attributes["current_temperature"]?.doubleValue
+            self.targetTemperature = entity.attributes["temperature"]?.doubleValue
+            self.targetTempLow = entity.attributes["target_temp_low"]?.doubleValue
+            self.targetTempHigh = entity.attributes["target_temp_high"]?.doubleValue
+            self.hvacAction = entity.attributes["hvac_action"]?.stringValue
+            self.hvacModes = entity.attributes["hvac_modes"]?.arrayValue?.compactMap(\.stringValue)
+            self.temperatureStep = entity.attributes["target_temp_step"]?.doubleValue
+        } else {
+            self.currentTemperature = nil
+            self.targetTemperature = nil
+            self.targetTempLow = nil
+            self.targetTempHigh = nil
+            self.hvacAction = nil
+            self.hvacModes = nil
+            self.temperatureStep = nil
+        }
+        
+        if entity.domain == "media_player" {
+            self.mediaTitle = entity.attributes["media_title"]?.stringValue
+            self.mediaArtist =
+                entity.attributes["media_artist"]?.stringValue ??
+                entity.attributes["media_album_name"]?.stringValue ??
+                entity.attributes["app_name"]?.stringValue
+            self.entityPicture = entity.attributes["entity_picture"]?.stringValue
+            self.volumeLevel = entity.attributes["volume_level"]?.doubleValue
+            self.isVolumeMuted = entity.attributes["is_volume_muted"]?.boolValue
+        } else {
+            self.mediaTitle = nil
+            self.mediaArtist = nil
+            self.entityPicture = nil
+            self.volumeLevel = nil
+            self.isVolumeMuted = nil
+        }
+        
         self.lastUpdated = Date()
     }
     
@@ -149,8 +240,33 @@ public struct WidgetEntitySnapshot: Codable, Sendable, Equatable, Identifiable, 
             state: state,
             icon: icon,
             unitOfMeasurement: unitOfMeasurement,
+            options: options,
+            currentOption: currentOption,
+            currentTemperature: currentTemperature,
+            targetTemperature: targetTemperature,
+            targetTempLow: targetTempLow,
+            targetTempHigh: targetTempHigh,
+            hvacAction: hvacAction,
+            hvacModes: hvacModes,
+            temperatureStep: temperatureStep,
+            mediaTitle: mediaTitle,
+            mediaArtist: mediaArtist,
+            entityPicture: entityPicture,
+            volumeLevel: volumeLevel,
+            isVolumeMuted: isVolumeMuted,
             lastUpdated: lastUpdated
         )
+    }
+    
+    public var effectiveTemperatureStep: Double {
+        if let step = temperatureStep, step > 0 { return step }
+        let ref = targetTemperature ?? currentTemperature ?? 70.0
+        return ref > 45.0 ? 1.0 : 0.5
+    }
+    
+    public var hasOptions: Bool {
+        guard let options else { return false }
+        return !options.isEmpty
     }
     
     public var isActive: Bool {
@@ -162,6 +278,11 @@ public struct WidgetEntitySnapshot: Codable, Sendable, Equatable, Identifiable, 
             return lower == "open" || lower == "opening"
         case "climate":
             return lower != "off" && lower != "unavailable"
+        case "remote":
+            let act = currentOption?.lowercased() ?? ""
+            return lower == "on" && act != "poweroff" && act != "power_off"
+        case "select", "input_select":
+            return lower != "off" && lower != "none" && lower != "unavailable" && lower != "unknown"
         default:
             return lower == "on" || lower == "playing" || lower == "home" || lower == "open"
         }
@@ -169,7 +290,7 @@ public struct WidgetEntitySnapshot: Codable, Sendable, Equatable, Identifiable, 
     
     public var isControllable: Bool {
         switch domain {
-        case "light", "switch", "fan", "input_boolean", "lock", "cover", "scene", "script", "automation", "media_player":
+        case "light", "switch", "fan", "input_boolean", "lock", "cover", "scene", "script", "automation", "media_player", "remote":
             return true
         default:
             return false
@@ -177,8 +298,18 @@ public struct WidgetEntitySnapshot: Codable, Sendable, Equatable, Identifiable, 
     }
     
     public var formattedState: String {
+        if domain == "remote", let current = currentOption, !current.isEmpty {
+            let lower = current.lowercased()
+            if lower == "poweroff" || lower == "power_off" || state.lowercased() == "off" {
+                return "Off"
+            }
+            return current
+        }
         if let unit = unitOfMeasurement, !unit.isEmpty {
             return "\(state) \(unit)"
+        }
+        if domain == "select" || domain == "input_select" {
+            return state
         }
         return state.replacingOccurrences(of: "_", with: " ").capitalized
     }

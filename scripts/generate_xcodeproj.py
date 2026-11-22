@@ -29,9 +29,15 @@ def main():
         'Sources/HavenWidgets/ServerAppEntity.swift',
         'Sources/HavenWidgets/EntityAppEntity.swift',
         'Sources/HavenWidgets/ToggleEntityIntent.swift',
+        'Sources/HavenWidgets/SelectOptionIntent.swift',
+        'Sources/HavenWidgets/ClimateIntents.swift',
+        'Sources/HavenWidgets/MediaPlayerIntents.swift',
         'Sources/HavenWidgets/WidgetTileView.swift',
         'Sources/HavenWidgets/SingleEntityWidget.swift',
         'Sources/HavenWidgets/ControlGridWidget.swift',
+        'Sources/HavenWidgets/OptionPickerWidget.swift',
+        'Sources/HavenWidgets/ClimateWidget.swift',
+        'Sources/HavenWidgets/MediaPlayerWidget.swift',
         'Sources/HavenWidgets/HavenWidgetBundle.swift'
     ]
     
@@ -438,7 +444,7 @@ def main():
 \t\t\t\tASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 \t\t\t\tCODE_SIGN_ENTITLEMENTS = Sources/NativeHAApp/Haven.entitlements;
 \t\t\t\tCODE_SIGN_STYLE = Automatic;
-\t\t\t\tCURRENT_PROJECT_VERSION = 4;
+\t\t\t\tCURRENT_PROJECT_VERSION = 5;
 \t\t\t\tDEVELOPMENT_ASSET_PATHS = "";
 \t\t\t\tDEVELOPMENT_TEAM = 9BLTG2R6JP;
 \t\t\t\tENABLE_PREVIEWS = YES;
@@ -449,7 +455,7 @@ def main():
 \t\t\t\t\t"$(inherited)",
 \t\t\t\t\t"@executable_path/Frameworks",
 \t\t\t\t);
-\t\t\t\tMARKETING_VERSION = 1.1.0;
+\t\t\t\tMARKETING_VERSION = 1.2.0;
 \t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven;
 \t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";
 \t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;
@@ -465,7 +471,7 @@ def main():
 \t\t\t\tASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 \t\t\t\tCODE_SIGN_ENTITLEMENTS = Sources/NativeHAApp/Haven.entitlements;
 \t\t\t\tCODE_SIGN_STYLE = Automatic;
-\t\t\t\tCURRENT_PROJECT_VERSION = 4;
+\t\t\t\tCURRENT_PROJECT_VERSION = 5;
 \t\t\t\tDEVELOPMENT_ASSET_PATHS = "";
 \t\t\t\tDEVELOPMENT_TEAM = 9BLTG2R6JP;
 \t\t\t\tENABLE_PREVIEWS = YES;
@@ -476,7 +482,7 @@ def main():
 \t\t\t\t\t"$(inherited)",
 \t\t\t\t\t"@executable_path/Frameworks",
 \t\t\t\t);
-\t\t\t\tMARKETING_VERSION = 1.1.0;
+\t\t\t\tMARKETING_VERSION = 1.2.0;
 \t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven;
 \t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";
 \t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;
@@ -491,7 +497,7 @@ def main():
 \t\t\t\tAPPLICATION_EXTENSION_API_ONLY = YES;
 \t\t\t\tCODE_SIGN_ENTITLEMENTS = Sources/HavenWidgets/HavenWidgets.entitlements;
 \t\t\t\tCODE_SIGN_STYLE = Automatic;
-\t\t\t\tCURRENT_PROJECT_VERSION = 4;
+\t\t\t\tCURRENT_PROJECT_VERSION = 5;
 \t\t\t\tDEVELOPMENT_TEAM = 9BLTG2R6JP;
 \t\t\t\tGENERATE_INFOPLIST_FILE = NO;
 \t\t\t\tINFOPLIST_FILE = Sources/HavenWidgets/Info.plist;
@@ -501,7 +507,7 @@ def main():
 \t\t\t\t\t"@executable_path/Frameworks",
 \t\t\t\t\t"@executable_path/../../Frameworks",
 \t\t\t\t);
-\t\t\t\tMARKETING_VERSION = 1.1.0;
+\t\t\t\tMARKETING_VERSION = 1.2.0;
 \t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven.widgets;
 \t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";
 \t\t\t\tSKIP_INSTALL = YES;
@@ -517,7 +523,7 @@ def main():
 \t\t\t\tAPPLICATION_EXTENSION_API_ONLY = YES;
 \t\t\t\tCODE_SIGN_ENTITLEMENTS = Sources/HavenWidgets/HavenWidgets.entitlements;
 \t\t\t\tCODE_SIGN_STYLE = Automatic;
-\t\t\t\tCURRENT_PROJECT_VERSION = 4;
+\t\t\t\tCURRENT_PROJECT_VERSION = 5;
 \t\t\t\tDEVELOPMENT_TEAM = 9BLTG2R6JP;
 \t\t\t\tGENERATE_INFOPLIST_FILE = NO;
 \t\t\t\tINFOPLIST_FILE = Sources/HavenWidgets/Info.plist;
@@ -527,7 +533,7 @@ def main():
 \t\t\t\t\t"@executable_path/Frameworks",
 \t\t\t\t\t"@executable_path/../../Frameworks",
 \t\t\t\t);
-\t\t\t\tMARKETING_VERSION = 1.1.0;
+\t\t\t\tMARKETING_VERSION = 1.2.0;
 \t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven.widgets;
 \t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";
 \t\t\t\tSKIP_INSTALL = YES;

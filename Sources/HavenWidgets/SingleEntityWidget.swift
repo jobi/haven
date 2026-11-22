@@ -3,39 +3,12 @@ import NativeHACore
 import SwiftUI
 import WidgetKit
 
-struct SingleEntityOptionsProvider: DynamicOptionsProvider {
-    @IntentParameterDependency<SingleEntityWidgetIntent>(\.$server)
-    var intent
-    
-    func results() async throws -> [EntityAppEntity] {
-        let serverId = intent?.server.id
-        let snapshots = await WidgetDataService.shared.availableEntities(forServerId: serverId)
-        return snapshots.map(EntityAppEntity.init(snapshot:))
-    }
-    
-    func defaultResult() async -> EntityAppEntity? {
-        let serverId = intent?.server.id
-        let defaults = await WidgetDataService.shared.defaultEntities(forServerId: serverId, limit: 1)
-        return defaults.first.map(EntityAppEntity.init(snapshot:))
-    }
-}
-
 struct SingleEntityWidgetIntent: WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "Select Home Entity"
-    static var description = IntentDescription("Choose a Home Assistant server and entity to display and control.")
+    static var description = IntentDescription("Search and choose a Home Assistant entity to display and control.")
     
-    @Parameter(title: "Server")
-    var server: ServerAppEntity?
-    
-    @Parameter(title: "Entity", optionsProvider: SingleEntityOptionsProvider())
+    @Parameter(title: "Entity")
     var entity: EntityAppEntity?
-    
-    static var parameterSummary: some ParameterSummary {
-        Summary {
-            \.$server
-            \.$entity
-        }
-    }
 }
 
 struct SingleEntityEntry: TimelineEntry {
@@ -72,23 +45,19 @@ struct SingleEntityProvider: AppIntentTimelineProvider {
     }
     
     private func resolveSnapshot(for configuration: SingleEntityWidgetIntent) async -> WidgetEntitySnapshot {
-        let pinnedServerId = configuration.server?.id ?? configuration.entity?.serverId
-        
-        if let entity = configuration.entity {
-            let targetServerId = pinnedServerId ?? entity.serverId
-            if let fetched = await WidgetDataService.shared.fetchSnapshot(for: entity.entityId, serverId: targetServerId) {
-                return fetched
-            }
+        if let entity = configuration.entity,
+           let fetched = await WidgetDataService.shared.fetchSnapshot(for: entity.entityId, serverId: entity.serverId) {
+            return fetched
         }
         
-        if let defaultEntity = await WidgetDataService.shared.defaultEntities(forServerId: pinnedServerId, limit: 1).first {
+        if let defaultEntity = await WidgetDataService.shared.defaultEntities(forServerId: configuration.entity?.serverId, limit: 1).first {
             return defaultEntity
         }
         
         return WidgetEntitySnapshot(
             entityId: "light.living_room_ceiling",
-            serverId: pinnedServerId,
-            friendlyName: configuration.server?.name ?? "Haven",
+            serverId: configuration.entity?.serverId,
+            friendlyName: "Haven",
             domain: "light",
             state: "off",
             icon: "mdi:home"
@@ -174,11 +143,7 @@ struct SingleEntityWidgetView: View {
     
     private var circularView: some View {
         let snapshot = entry.snapshot
-        let symbol = IconMapper.sfSymbol(
-            for: snapshot.icon,
-            domain: snapshot.domain,
-            isActive: snapshot.isActive
-        )
+        let symbol = snapshot.sfSymbolName
         
         return ZStack {
             AccessoryWidgetBackground()
@@ -196,11 +161,7 @@ struct SingleEntityWidgetView: View {
     
     private var rectangularView: some View {
         let snapshot = entry.snapshot
-        let symbol = IconMapper.sfSymbol(
-            for: snapshot.icon,
-            domain: snapshot.domain,
-            isActive: snapshot.isActive
-        )
+        let symbol = snapshot.sfSymbolName
         
         return HStack(spacing: 8) {
             Image(systemName: symbol)

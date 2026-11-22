@@ -14,9 +14,15 @@
 		EED9F69FC954EEB68E5AD32C /* ServerAppEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6CC2CBCBD5CBAA73877A6F /* ServerAppEntity.swift */; };
 		806ECB7939D5CA7FCA2CEDCE /* EntityAppEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2324F6D05C8A4BC3ABF97A9 /* EntityAppEntity.swift */; };
 		A3DA79A064AB8D0CA31E9FCD /* ToggleEntityIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A9169D922916BF378E1EF43 /* ToggleEntityIntent.swift */; };
+		1254D36633D41C66C84077DF /* SelectOptionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEE75885C0216BB9D306EDCE /* SelectOptionIntent.swift */; };
+		AEC103ECBC6AB581DD039230 /* ClimateIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1FEDE75313D38161E74C4F4 /* ClimateIntents.swift */; };
+		CA10D349A888C3DAB87A2BB5 /* MediaPlayerIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835E945D3118E9C25DCDA85A /* MediaPlayerIntents.swift */; };
 		7C42FAEC70013186B9BE2D19 /* WidgetTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEF94A9E2D775D778AC438E2 /* WidgetTileView.swift */; };
 		49534B7BD9DE735F650E094E /* SingleEntityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B97C4E753143939B8146B1 /* SingleEntityWidget.swift */; };
 		DFDDAEB862ED595757B91C1A /* ControlGridWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A41A1B5D11EFE39881B93E8B /* ControlGridWidget.swift */; };
+		26375015A7CD35E719AC46D2 /* OptionPickerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1206E43B33BC4B4C58648F98 /* OptionPickerWidget.swift */; };
+		4E86EA384531B7170C4E1E11 /* ClimateWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4B7E1BC06C656074B335DB /* ClimateWidget.swift */; };
+		29810361DC3B6EA4C9B76C79 /* MediaPlayerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D2E695CC17BCAE335FA82B /* MediaPlayerWidget.swift */; };
 		71DE94955B45C88D70A6EAFD /* HavenWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10D19E9284920CF8ADDCE59B /* HavenWidgetBundle.swift */; };
 		0D2EB401D0691D8718413B39 /* NativeHACore in Frameworks */ = {isa = PBXBuildFile; productRef = 7EEFF35FC4A06A1FE4BDCE98 /* NativeHACore */; };
 		977F6E91D30F34B8F2B3A853 /* NativeHACore in Frameworks */ = {isa = PBXBuildFile; productRef = 9559A00FED5728367A6F2236 /* NativeHACore */; };
@@ -56,9 +62,15 @@
 		1B6CC2CBCBD5CBAA73877A6F /* ServerAppEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/HavenWidgets/ServerAppEntity.swift"; sourceTree = "<group>"; };
 		F2324F6D05C8A4BC3ABF97A9 /* EntityAppEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/HavenWidgets/EntityAppEntity.swift"; sourceTree = "<group>"; };
 		1A9169D922916BF378E1EF43 /* ToggleEntityIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/HavenWidgets/ToggleEntityIntent.swift"; sourceTree = "<group>"; };
+		AEE75885C0216BB9D306EDCE /* SelectOptionIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/HavenWidgets/SelectOptionIntent.swift"; sourceTree = "<group>"; };
+		D1FEDE75313D38161E74C4F4 /* ClimateIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/HavenWidgets/ClimateIntents.swift"; sourceTree = "<group>"; };
+		835E945D3118E9C25DCDA85A /* MediaPlayerIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/HavenWidgets/MediaPlayerIntents.swift"; sourceTree = "<group>"; };
 		BEF94A9E2D775D778AC438E2 /* WidgetTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/HavenWidgets/WidgetTileView.swift"; sourceTree = "<group>"; };
 		A4B97C4E753143939B8146B1 /* SingleEntityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/HavenWidgets/SingleEntityWidget.swift"; sourceTree = "<group>"; };
 		A41A1B5D11EFE39881B93E8B /* ControlGridWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/HavenWidgets/ControlGridWidget.swift"; sourceTree = "<group>"; };
+		1206E43B33BC4B4C58648F98 /* OptionPickerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/HavenWidgets/OptionPickerWidget.swift"; sourceTree = "<group>"; };
+		2D4B7E1BC06C656074B335DB /* ClimateWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/HavenWidgets/ClimateWidget.swift"; sourceTree = "<group>"; };
+		50D2E695CC17BCAE335FA82B /* MediaPlayerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/HavenWidgets/MediaPlayerWidget.swift"; sourceTree = "<group>"; };
 		10D19E9284920CF8ADDCE59B /* HavenWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/HavenWidgets/HavenWidgetBundle.swift"; sourceTree = "<group>"; };
 		69D0A88DC29A06AA43BDFCB4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Sources/HavenWidgets/Info.plist"; sourceTree = "<group>"; };
 		D3BEF730A343C963F358A6FC /* HavenWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Sources/HavenWidgets/HavenWidgets.entitlements"; sourceTree = "<group>"; };
@@ -105,9 +117,15 @@
 				1B6CC2CBCBD5CBAA73877A6F /* ServerAppEntity.swift */,
 				F2324F6D05C8A4BC3ABF97A9 /* EntityAppEntity.swift */,
 				1A9169D922916BF378E1EF43 /* ToggleEntityIntent.swift */,
+				AEE75885C0216BB9D306EDCE /* SelectOptionIntent.swift */,
+				D1FEDE75313D38161E74C4F4 /* ClimateIntents.swift */,
+				835E945D3118E9C25DCDA85A /* MediaPlayerIntents.swift */,
 				BEF94A9E2D775D778AC438E2 /* WidgetTileView.swift */,
 				A4B97C4E753143939B8146B1 /* SingleEntityWidget.swift */,
 				A41A1B5D11EFE39881B93E8B /* ControlGridWidget.swift */,
+				1206E43B33BC4B4C58648F98 /* OptionPickerWidget.swift */,
+				2D4B7E1BC06C656074B335DB /* ClimateWidget.swift */,
+				50D2E695CC17BCAE335FA82B /* MediaPlayerWidget.swift */,
 				10D19E9284920CF8ADDCE59B /* HavenWidgetBundle.swift */,
 				69D0A88DC29A06AA43BDFCB4 /* Info.plist */,
 				D3BEF730A343C963F358A6FC /* HavenWidgets.entitlements */,
@@ -246,9 +264,15 @@
 				EED9F69FC954EEB68E5AD32C /* ServerAppEntity.swift in Sources */,
 				806ECB7939D5CA7FCA2CEDCE /* EntityAppEntity.swift in Sources */,
 				A3DA79A064AB8D0CA31E9FCD /* ToggleEntityIntent.swift in Sources */,
+				1254D36633D41C66C84077DF /* SelectOptionIntent.swift in Sources */,
+				AEC103ECBC6AB581DD039230 /* ClimateIntents.swift in Sources */,
+				CA10D349A888C3DAB87A2BB5 /* MediaPlayerIntents.swift in Sources */,
 				7C42FAEC70013186B9BE2D19 /* WidgetTileView.swift in Sources */,
 				49534B7BD9DE735F650E094E /* SingleEntityWidget.swift in Sources */,
 				DFDDAEB862ED595757B91C1A /* ControlGridWidget.swift in Sources */,
+				26375015A7CD35E719AC46D2 /* OptionPickerWidget.swift in Sources */,
+				4E86EA384531B7170C4E1E11 /* ClimateWidget.swift in Sources */,
+				29810361DC3B6EA4C9B76C79 /* MediaPlayerWidget.swift in Sources */,
 				71DE94955B45C88D70A6EAFD /* HavenWidgetBundle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -337,7 +361,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Sources/NativeHAApp/Haven.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 9BLTG2R6JP;
 				ENABLE_PREVIEWS = YES;
@@ -348,7 +372,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -364,7 +388,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Sources/NativeHAApp/Haven.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 9BLTG2R6JP;
 				ENABLE_PREVIEWS = YES;
@@ -375,7 +399,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -390,7 +414,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = Sources/HavenWidgets/HavenWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 9BLTG2R6JP;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Sources/HavenWidgets/Info.plist;
@@ -400,7 +424,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -416,7 +440,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = Sources/HavenWidgets/HavenWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 9BLTG2R6JP;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Sources/HavenWidgets/Info.plist;
@@ -426,7 +450,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

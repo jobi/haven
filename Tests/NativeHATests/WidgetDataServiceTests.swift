@@ -106,4 +106,79 @@ final class WidgetDataServiceTests: XCTestCase {
         SharedAppGroup.removeEntitySnapshots(forServerId: "server-a")
         SharedAppGroup.removeEntitySnapshots(forServerId: "server-b")
     }
+    
+    func testMultiChoiceRemoteAndSelectMapping() {
+        let harmonyEntity = HAEntityState(
+            entityId: "remote.living_room_harmony",
+            state: "on",
+            attributes: [
+                "friendly_name": AnyCodable("Living Room Harmony"),
+                "activity_list": AnyCodable([AnyCodable("Watch TV"), AnyCodable("Apple TV"), AnyCodable("Play PS5")]),
+                "current_activity": AnyCodable("Apple TV")
+            ]
+        )
+        let snapshot = WidgetEntitySnapshot(from: harmonyEntity, serverId: "home")
+        XCTAssertTrue(snapshot.hasOptions)
+        XCTAssertEqual(snapshot.options, ["Watch TV", "Apple TV", "Play PS5"])
+        XCTAssertEqual(snapshot.currentOption, "Apple TV")
+        XCTAssertEqual(snapshot.formattedState, "Apple TV")
+        XCTAssertTrue(snapshot.isActive)
+        
+        let turnOn = WidgetDataService.optionServiceCall(for: "remote", option: "Watch TV")
+        XCTAssertEqual(turnOn.domain, "remote")
+        XCTAssertEqual(turnOn.service, "turn_on")
+        XCTAssertEqual(turnOn.serviceData?["activity"]?.stringValue, "Watch TV")
+        
+        let powerOff = WidgetDataService.optionServiceCall(for: "remote", option: "PowerOff")
+        XCTAssertEqual(powerOff.domain, "remote")
+        XCTAssertEqual(powerOff.service, "turn_off")
+        XCTAssertNil(powerOff.serviceData)
+        
+        let selectOpt = WidgetDataService.optionServiceCall(for: "input_select", option: "Evening")
+        XCTAssertEqual(selectOpt.domain, "input_select")
+        XCTAssertEqual(selectOpt.service, "select_option")
+        XCTAssertEqual(selectOpt.serviceData?["option"]?.stringValue, "Evening")
+    }
+    
+    func testClimateSnapshotExtraction() {
+        let climate = HAEntityState(
+            entityId: "climate.living_room",
+            state: "heat",
+            attributes: [
+                "friendly_name": AnyCodable("Living Room"),
+                "current_temperature": AnyCodable(70.5),
+                "temperature": AnyCodable(72.0),
+                "hvac_action": AnyCodable("heating"),
+                "hvac_modes": AnyCodable([AnyCodable("off"), AnyCodable("heat"), AnyCodable("cool"), AnyCodable("heat_cool")])
+            ]
+        )
+        let snap = WidgetEntitySnapshot(from: climate, serverId: "home")
+        XCTAssertEqual(snap.currentTemperature, 70.5)
+        XCTAssertEqual(snap.targetTemperature, 72.0)
+        XCTAssertEqual(snap.hvacAction, "heating")
+        XCTAssertEqual(snap.hvacModes, ["off", "heat", "cool", "heat_cool"])
+        XCTAssertEqual(snap.effectiveTemperatureStep, 1.0)
+    }
+    
+    func testMediaPlayerSnapshotExtraction() {
+        let player = HAEntityState(
+            entityId: "media_player.living_room_sonos",
+            state: "playing",
+            attributes: [
+                "friendly_name": AnyCodable("Living Room Sonos"),
+                "media_title": AnyCodable("Midnight City"),
+                "media_artist": AnyCodable("M83"),
+                "entity_picture": AnyCodable("/api/media_player_proxy/media_player.living_room_sonos?token=abc"),
+                "volume_level": AnyCodable(0.45),
+                "is_volume_muted": AnyCodable(false)
+            ]
+        )
+        let snap = WidgetEntitySnapshot(from: player, serverId: "home")
+        XCTAssertEqual(snap.mediaTitle, "Midnight City")
+        XCTAssertEqual(snap.mediaArtist, "M83")
+        XCTAssertEqual(snap.entityPicture, "/api/media_player_proxy/media_player.living_room_sonos?token=abc")
+        XCTAssertEqual(snap.volumeLevel, 0.45)
+        XCTAssertEqual(snap.isVolumeMuted, false)
+        XCTAssertTrue(snap.isActive)
+    }
 }

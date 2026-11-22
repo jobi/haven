@@ -3,43 +3,29 @@ import NativeHACore
 import SwiftUI
 import WidgetKit
 
-struct ControlGridEntityOptionsProvider: DynamicOptionsProvider {
-    @IntentParameterDependency<ControlGridWidgetIntent>(\.$server)
-    var intent
-    
-    func results() async throws -> [EntityAppEntity] {
-        let serverId = intent?.server.id
-        let snapshots = await WidgetDataService.shared.availableEntities(forServerId: serverId)
-        return snapshots.map(EntityAppEntity.init(snapshot:))
-    }
-}
-
 struct ControlGridWidgetIntent: WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "Configure Quick Controls"
-    static var description = IntentDescription("Choose a Home Assistant server and up to 6 entities for your interactive control grid.")
+    static var description = IntentDescription("Search and choose up to 6 Home Assistant entities for your interactive control grid.")
     
     @Parameter(title: "Title", default: "Home Controls")
     var title: String
     
-    @Parameter(title: "Server")
-    var server: ServerAppEntity?
-    
-    @Parameter(title: "Entity 1", optionsProvider: ControlGridEntityOptionsProvider())
+    @Parameter(title: "Entity 1")
     var entity1: EntityAppEntity?
     
-    @Parameter(title: "Entity 2", optionsProvider: ControlGridEntityOptionsProvider())
+    @Parameter(title: "Entity 2")
     var entity2: EntityAppEntity?
     
-    @Parameter(title: "Entity 3", optionsProvider: ControlGridEntityOptionsProvider())
+    @Parameter(title: "Entity 3")
     var entity3: EntityAppEntity?
     
-    @Parameter(title: "Entity 4", optionsProvider: ControlGridEntityOptionsProvider())
+    @Parameter(title: "Entity 4")
     var entity4: EntityAppEntity?
     
-    @Parameter(title: "Entity 5", optionsProvider: ControlGridEntityOptionsProvider())
+    @Parameter(title: "Entity 5")
     var entity5: EntityAppEntity?
     
-    @Parameter(title: "Entity 6", optionsProvider: ControlGridEntityOptionsProvider())
+    @Parameter(title: "Entity 6")
     var entity6: EntityAppEntity?
     
     var configuredEntities: [EntityAppEntity] {
@@ -82,27 +68,48 @@ struct ControlGridProvider: AppIntentTimelineProvider {
     private func buildEntry(for configuration: ControlGridWidgetIntent, family: WidgetFamily) async -> ControlGridEntry {
         let maxCount = (family == .systemLarge) ? 6 : 4
         let configured = Array(configuration.configuredEntities.prefix(maxCount))
-        let pinnedServerId = configuration.server?.id ?? configured.first?.serverId
         
         let snapshots: [WidgetEntitySnapshot]
         if !configured.isEmpty {
-            let entityIds = configured.map(\.entityId)
-            let fetched = await WidgetDataService.shared.fetchSnapshots(for: entityIds, serverId: pinnedServerId)
+            let fetched = await withTaskGroup(of: (Int, WidgetEntitySnapshot?).self) { group in
+                for (index, item) in configured.enumerated() {
+                    group.addTask {
+                        let snap = await WidgetDataService.shared.fetchSnapshot(for: item.entityId, serverId: item.serverId)
+                        return (index, snap)
+                    }
+                }
+                var indexed: [(Int, WidgetEntitySnapshot)] = []
+                for await (index, snap) in group {
+                    if let snap {
+                        indexed.append((index, snap))
+                    }
+                }
+                return indexed.sorted { $0.0 < $1.0 }.map(\.1)
+            }
             if !fetched.isEmpty {
                 snapshots = fetched
             } else {
-                snapshots = await WidgetDataService.shared.defaultEntities(forServerId: pinnedServerId, limit: maxCount)
+                snapshots = await WidgetDataService.shared.defaultEntities(forServerId: configured.first?.serverId, limit: maxCount)
             }
         } else {
-            snapshots = await WidgetDataService.shared.defaultEntities(forServerId: pinnedServerId, limit: maxCount)
+            snapshots = await WidgetDataService.shared.defaultEntities(forServerId: nil, limit: maxCount)
+        }
+        
+        let distinctServerIds = Set(snapshots.compactMap(\.serverId))
+        let resolvedServerName: String?
+        if distinctServerIds.count == 1, let onlyId = distinctServerIds.first {
+            resolvedServerName = await WidgetDataService.shared.resolveServer(for: onlyId)?.name
+        } else if distinctServerIds.count > 1 {
+            resolvedServerName = "Multi-Server"
+        } else {
+            resolvedServerName = nil
         }
         
         let displayTitle = configuration.title.trimmingCharacters(in: .whitespacesAndNewlines)
-        let resolvedServer = await WidgetDataService.shared.resolveServer(for: pinnedServerId)
         return ControlGridEntry(
             date: Date(),
-            title: displayTitle.isEmpty ? (resolvedServer?.name ?? "Home Controls") : displayTitle,
-            serverName: resolvedServer?.name,
+            title: displayTitle.isEmpty ? (resolvedServerName ?? "Home Controls") : displayTitle,
+            serverName: resolvedServerName,
             snapshots: snapshots
         )
     }
