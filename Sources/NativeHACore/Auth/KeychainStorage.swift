@@ -23,16 +23,11 @@ public actor KeychainStorage {
         
         // Try deleting existing first to avoid duplicate item errors
         SecItemDelete(query as CFDictionary)
+        _ = SecItemAdd(query as CFDictionary, nil)
         
-        let status = SecItemAdd(query as CFDictionary, nil)
-        if status != errSecSuccess {
-            // If Keychain returns errSecMissingEntitlement (-34018) or fails in simulator environment,
-            // fall back to UserDefaults storage
-            UserDefaults.standard.set(data, forKey: "fallback_\(account)")
-        } else {
-            // Also keep fallback in sync
-            UserDefaults.standard.set(data, forKey: "fallback_\(account)")
-        }
+        // Keep App Group UserDefaults in sync so the HavenWidgets extension can authenticate
+        SharedAppGroup.userDefaults.set(data, forKey: "fallback_\(account)")
+        UserDefaults.standard.set(data, forKey: "fallback_\(account)")
     }
     
     public func retrieveTokens(forServerId serverId: String) throws -> AuthTokens? {
@@ -50,13 +45,28 @@ public actor KeychainStorage {
         
         if status == errSecSuccess, let data = result as? Data {
             let decoder = JSONDecoder()
-            return try? decoder.decode(AuthTokens.self, from: data)
+            if let tokens = try? decoder.decode(AuthTokens.self, from: data) {
+                // Ensure App Group container also has the latest tokens for widgets
+                SharedAppGroup.userDefaults.set(data, forKey: "fallback_\(account)")
+                return tokens
+            }
         }
         
-        // Fallback to UserDefaults if Keychain is unavailable (e.g. Simulator -34018)
+        // Check Shared App Group container (used by HavenWidgets extension)
+        if let sharedData = SharedAppGroup.userDefaults.data(forKey: "fallback_\(account)") {
+            let decoder = JSONDecoder()
+            if let tokens = try? decoder.decode(AuthTokens.self, from: sharedData) {
+                return tokens
+            }
+        }
+        
+        // Fallback to UserDefaults.standard if Keychain is unavailable (e.g. Simulator -34018)
         if let fallbackData = UserDefaults.standard.data(forKey: "fallback_\(account)") {
             let decoder = JSONDecoder()
-            return try? decoder.decode(AuthTokens.self, from: fallbackData)
+            if let tokens = try? decoder.decode(AuthTokens.self, from: fallbackData) {
+                SharedAppGroup.userDefaults.set(fallbackData, forKey: "fallback_\(account)")
+                return tokens
+            }
         }
         
         return nil
@@ -70,6 +80,7 @@ public actor KeychainStorage {
             kSecAttrAccount as String: account
         ]
         SecItemDelete(query as CFDictionary)
+        SharedAppGroup.userDefaults.removeObject(forKey: "fallback_\(account)")
         UserDefaults.standard.removeObject(forKey: "fallback_\(account)")
     }
     

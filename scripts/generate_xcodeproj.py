@@ -13,7 +13,7 @@ def main():
     schemes_dir = os.path.join(xcodeproj_dir, 'xcshareddata', 'xcschemes')
     os.makedirs(schemes_dir, exist_ok=True)
     
-    # App sources
+    # Main App sources & resources
     app_swift_files = [
         'Sources/NativeHAApp/NativeHAApp.swift',
         'Sources/NativeHAApp/AppState.swift'
@@ -24,7 +24,18 @@ def main():
         'Sources/NativeHAApp/PrivacyInfo.xcprivacy'
     ]
     
-    # IDs
+    # Widget Extension sources
+    widget_swift_files = [
+        'Sources/HavenWidgets/ServerAppEntity.swift',
+        'Sources/HavenWidgets/EntityAppEntity.swift',
+        'Sources/HavenWidgets/ToggleEntityIntent.swift',
+        'Sources/HavenWidgets/WidgetTileView.swift',
+        'Sources/HavenWidgets/SingleEntityWidget.swift',
+        'Sources/HavenWidgets/ControlGridWidget.swift',
+        'Sources/HavenWidgets/HavenWidgetBundle.swift'
+    ]
+    
+    # IDs - Project & Main App
     proj_id = generate_id('PROJECT_NativeHA')
     main_group_id = generate_id('MAIN_GROUP')
     products_group_id = generate_id('PRODUCTS_GROUP')
@@ -33,6 +44,7 @@ def main():
     sources_build_phase_id = generate_id('SOURCES_BUILD_PHASE')
     frameworks_build_phase_id = generate_id('FRAMEWORKS_BUILD_PHASE')
     resources_build_phase_id = generate_id('RESOURCES_BUILD_PHASE')
+    embed_ext_build_phase_id = generate_id('EMBED_EXT_BUILD_PHASE')
     
     local_pkg_ref_id = generate_id('LOCAL_PKG_REF')
     pkg_dep_id = generate_id('PKG_DEP_NativeHACore')
@@ -46,11 +58,30 @@ def main():
     proj_debug_config_id = generate_id('PROJ_DEBUG_CONFIG')
     proj_release_config_id = generate_id('PROJ_RELEASE_CONFIG')
     
+    # IDs - Widget Extension
+    widget_group_id = generate_id('WIDGET_GROUP')
+    widget_target_id = generate_id('TARGET_HavenWidgets')
+    widget_product_id = generate_id('PRODUCT_HavenWidgets_appex')
+    widget_sources_phase_id = generate_id('WIDGET_SOURCES_BUILD_PHASE')
+    widget_frameworks_phase_id = generate_id('WIDGET_FRAMEWORKS_BUILD_PHASE')
+    widget_resources_phase_id = generate_id('WIDGET_RESOURCES_BUILD_PHASE')
+    widget_pkg_dep_id = generate_id('WIDGET_PKG_DEP_NativeHACore')
+    widget_pkg_build_file_id = generate_id('WIDGET_PKG_BUILDFILE_NativeHACore')
+    widget_embed_build_file_id = generate_id('WIDGET_EMBED_BUILDFILE')
+    widget_target_dep_id = generate_id('WIDGET_TARGET_DEP')
+    widget_container_proxy_id = generate_id('WIDGET_CONTAINER_PROXY')
+    
+    widget_config_list_id = generate_id('WIDGET_CONFIG_LIST')
+    widget_debug_config_id = generate_id('WIDGET_DEBUG_CONFIG')
+    widget_release_config_id = generate_id('WIDGET_RELEASE_CONFIG')
+    
     pbx_build_files = []
     pbx_file_refs = []
     sources_phase_files = []
     resources_phase_files = []
     main_group_children = []
+    widget_sources_phase_files = []
+    widget_group_children = []
     
     # Add App Swift files
     for sf in app_swift_files:
@@ -81,11 +112,40 @@ def main():
         resources_phase_files.append(f'\t\t\t\t{build_file_id} /* {filename} in Resources */,')
         main_group_children.append(f'\t\t\t\t{file_ref_id} /* {filename} */,')
 
-    # Add Package Dependency build file in Frameworks
+    # Add Entitlements file refs (not in build phases, referenced by build settings)
+    app_ent_id = generate_id('FILEREF_Haven.entitlements')
+    pbx_file_refs.append(f'\t\t{app_ent_id} /* Haven.entitlements */ = {{isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Sources/NativeHAApp/Haven.entitlements"; sourceTree = "<group>"; }};')
+    main_group_children.append(f'\t\t\t\t{app_ent_id} /* Haven.entitlements */,')
+
+    # Add Widget Swift files
+    for wf in widget_swift_files:
+        file_ref_id = generate_id('FILEREF_' + wf)
+        build_file_id = generate_id('BUILDFILE_' + wf)
+        filename = os.path.basename(wf)
+        
+        pbx_file_refs.append(f'\t\t{file_ref_id} /* {filename} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "{wf}"; sourceTree = "<group>"; }};')
+        pbx_build_files.append(f'\t\t{build_file_id} /* {filename} in Sources */ = {{isa = PBXBuildFile; fileRef = {file_ref_id} /* {filename} */; }};')
+        widget_sources_phase_files.append(f'\t\t\t\t{build_file_id} /* {filename} in Sources */,')
+        widget_group_children.append(f'\t\t\t\t{file_ref_id} /* {filename} */,')
+
+    widget_plist_id = generate_id('FILEREF_HavenWidgets_Info.plist')
+    pbx_file_refs.append(f'\t\t{widget_plist_id} /* Info.plist */ = {{isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Sources/HavenWidgets/Info.plist"; sourceTree = "<group>"; }};')
+    widget_group_children.append(f'\t\t\t\t{widget_plist_id} /* Info.plist */,')
+
+    widget_ent_id = generate_id('FILEREF_HavenWidgets.entitlements')
+    pbx_file_refs.append(f'\t\t{widget_ent_id} /* HavenWidgets.entitlements */ = {{isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Sources/HavenWidgets/HavenWidgets.entitlements"; sourceTree = "<group>"; }};')
+    widget_group_children.append(f'\t\t\t\t{widget_ent_id} /* HavenWidgets.entitlements */,')
+
+    # Add Package Dependency build files in Frameworks
     pbx_build_files.append(f'\t\t{pkg_build_file_id} /* NativeHACore in Frameworks */ = {{isa = PBXBuildFile; productRef = {pkg_dep_id} /* NativeHACore */; }};')
+    pbx_build_files.append(f'\t\t{widget_pkg_build_file_id} /* NativeHACore in Frameworks */ = {{isa = PBXBuildFile; productRef = {widget_pkg_dep_id} /* NativeHACore */; }};')
     
-    # Product ref
+    # Embed Widget Extension in Main App
+    pbx_build_files.append(f'\t\t{widget_embed_build_file_id} /* HavenWidgets.appex in Embed Foundation Extensions */ = {{isa = PBXBuildFile; fileRef = {widget_product_id} /* HavenWidgets.appex */; settings = {{ATTRIBUTES = (RemoveHeadersOnCopy, ); }}; }};')
+    
+    # Product refs
     pbx_file_refs.append(f'\t\t{app_product_id} /* Haven.app */ = {{isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Haven.app; sourceTree = BUILT_PRODUCTS_DIR; }};')
+    pbx_file_refs.append(f'\t\t{widget_product_id} /* HavenWidgets.appex */ = {{isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = HavenWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; }};')
 
     pbxproj_content = f"""// !$*UTF8*$!
 {{
@@ -98,6 +158,30 @@ def main():
 /* Begin PBXBuildFile section */
 {chr(10).join(pbx_build_files)}
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+\t\t{widget_container_proxy_id} /* PBXContainerItemProxy */ = {{
+\t\t\tisa = PBXContainerItemProxy;
+\t\t\tcontainerPortal = {proj_id} /* Project object */;
+\t\t\tproxyType = 1;
+\t\t\tremoteGlobalIDString = {widget_target_id};
+\t\t\tremoteInfo = HavenWidgets;
+\t\t}};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+\t\t{embed_ext_build_phase_id} /* Embed Foundation Extensions */ = {{
+\t\t\tisa = PBXCopyFilesBuildPhase;
+\t\t\tbuildActionMask = 2147483647;
+\t\t\tdstPath = "";
+\t\t\tdstSubfolderSpec = 13;
+\t\t\tfiles = (
+\t\t\t\t{widget_embed_build_file_id} /* HavenWidgets.appex in Embed Foundation Extensions */,
+\t\t\t);
+\t\t\tname = "Embed Foundation Extensions";
+\t\t\trunOnlyForDeploymentPostprocessing = 0;
+\t\t}};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 {chr(10).join(pbx_file_refs)}
@@ -112,6 +196,14 @@ def main():
 \t\t\t);
 \t\t\trunOnlyForDeploymentPostprocessing = 0;
 \t\t}};
+\t\t{widget_frameworks_phase_id} /* Frameworks */ = {{
+\t\t\tisa = PBXFrameworksBuildPhase;
+\t\t\tbuildActionMask = 2147483647;
+\t\t\tfiles = (
+\t\t\t\t{widget_pkg_build_file_id} /* NativeHACore in Frameworks */,
+\t\t\t);
+\t\t\trunOnlyForDeploymentPostprocessing = 0;
+\t\t}};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -119,14 +211,24 @@ def main():
 \t\t\tisa = PBXGroup;
 \t\t\tchildren = (
 {chr(10).join(main_group_children)}
+\t\t\t\t{widget_group_id} /* HavenWidgets */,
 \t\t\t\t{products_group_id} /* Products */,
 \t\t\t);
+\t\t\tsourceTree = "<group>";
+\t\t}};
+\t\t{widget_group_id} /* HavenWidgets */ = {{
+\t\t\tisa = PBXGroup;
+\t\t\tchildren = (
+{chr(10).join(widget_group_children)}
+\t\t\t);
+\t\t\tname = HavenWidgets;
 \t\t\tsourceTree = "<group>";
 \t\t}};
 \t\t{products_group_id} /* Products */ = {{
 \t\t\tisa = PBXGroup;
 \t\t\tchildren = (
 \t\t\t\t{app_product_id} /* Haven.app */,
+\t\t\t\t{widget_product_id} /* HavenWidgets.appex */,
 \t\t\t);
 \t\t\tname = Products;
 \t\t\tsourceTree = "<group>";
@@ -141,10 +243,12 @@ def main():
 \t\t\t\t{sources_build_phase_id} /* Sources */,
 \t\t\t\t{frameworks_build_phase_id} /* Frameworks */,
 \t\t\t\t{resources_build_phase_id} /* Resources */,
+\t\t\t\t{embed_ext_build_phase_id} /* Embed Foundation Extensions */,
 \t\t\t);
 \t\t\tbuildRules = (
 \t\t\t);
 \t\t\tdependencies = (
+\t\t\t\t{widget_target_dep_id} /* PBXTargetDependency */,
 \t\t\t);
 \t\t\tname = Haven;
 \t\t\tpackageProductDependencies = (
@@ -153,6 +257,26 @@ def main():
 \t\t\tproductName = Haven;
 \t\t\tproductReference = {app_product_id} /* Haven.app */;
 \t\t\tproductType = "com.apple.product-type.application";
+\t\t}};
+\t\t{widget_target_id} /* HavenWidgets */ = {{
+\t\t\tisa = PBXNativeTarget;
+\t\t\tbuildConfigurationList = {widget_config_list_id} /* Build configuration list for PBXNativeTarget "HavenWidgets" */;
+\t\t\tbuildPhases = (
+\t\t\t\t{widget_sources_phase_id} /* Sources */,
+\t\t\t\t{widget_frameworks_phase_id} /* Frameworks */,
+\t\t\t\t{widget_resources_phase_id} /* Resources */,
+\t\t\t);
+\t\t\tbuildRules = (
+\t\t\t);
+\t\t\tdependencies = (
+\t\t\t);
+\t\t\tname = HavenWidgets;
+\t\t\tpackageProductDependencies = (
+\t\t\t\t{widget_pkg_dep_id} /* NativeHACore */,
+\t\t\t);
+\t\t\tproductName = HavenWidgets;
+\t\t\tproductReference = {widget_product_id} /* HavenWidgets.appex */;
+\t\t\tproductType = "com.apple.product-type.app-extension";
 \t\t}};
 /* End PBXNativeTarget section */
 
@@ -164,6 +288,10 @@ def main():
 \t\t\t\tLastUpgradeCheck = 1600;
 \t\t\t\tTargetAttributes = {{
 \t\t\t\t\t{target_id} = {{
+\t\t\t\t\t\tCreatedOnToolsVersion = 16.0;
+\t\t\t\t\t\tProvisioningStyle = Automatic;
+\t\t\t\t\t}};
+\t\t\t\t\t{widget_target_id} = {{
 \t\t\t\t\t\tCreatedOnToolsVersion = 16.0;
 \t\t\t\t\t\tProvisioningStyle = Automatic;
 \t\t\t\t\t}};
@@ -186,6 +314,7 @@ def main():
 \t\t\tprojectRoot = "";
 \t\t\ttargets = (
 \t\t\t\t{target_id} /* Haven */,
+\t\t\t\t{widget_target_id} /* HavenWidgets */,
 \t\t\t);
 \t\t}};
 /* End PBXProject section */
@@ -196,6 +325,13 @@ def main():
 \t\t\tbuildActionMask = 2147483647;
 \t\t\tfiles = (
 {chr(10).join(resources_phase_files)}
+\t\t\t);
+\t\t\trunOnlyForDeploymentPostprocessing = 0;
+\t\t}};
+\t\t{widget_resources_phase_id} /* Resources */ = {{
+\t\t\tisa = PBXResourcesBuildPhase;
+\t\t\tbuildActionMask = 2147483647;
+\t\t\tfiles = (
 \t\t\t);
 \t\t\trunOnlyForDeploymentPostprocessing = 0;
 \t\t}};
@@ -210,7 +346,23 @@ def main():
 \t\t\t);
 \t\t\trunOnlyForDeploymentPostprocessing = 0;
 \t\t}};
+\t\t{widget_sources_phase_id} /* Sources */ = {{
+\t\t\tisa = PBXSourcesBuildPhase;
+\t\t\tbuildActionMask = 2147483647;
+\t\t\tfiles = (
+{chr(10).join(widget_sources_phase_files)}
+\t\t\t);
+\t\t\trunOnlyForDeploymentPostprocessing = 0;
+\t\t}};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+\t\t{widget_target_dep_id} /* PBXTargetDependency */ = {{
+\t\t\tisa = PBXTargetDependency;
+\t\t\ttarget = {widget_target_id} /* HavenWidgets */;
+\t\t\ttargetProxy = {widget_container_proxy_id} /* PBXContainerItemProxy */;
+\t\t}};
+/* End PBXTargetDependency section */
 
 /* Begin XCLocalSwiftPackageReference section */
 \t\t{local_pkg_ref_id} /* LocalPackageData */ = {{
@@ -225,6 +377,11 @@ def main():
 \t\t\tpackage = {local_pkg_ref_id} /* LocalPackageData */;
 \t\t\tproductName = NativeHACore;
 \t\t}};
+\t\t{widget_pkg_dep_id} /* NativeHACore */ = {{
+\t\t\tisa = XCSwiftPackageProductDependency;
+\t\t\tpackage = {local_pkg_ref_id} /* LocalPackageData */;
+\t\t\tproductName = NativeHACore;
+\t\t}};
 /* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -235,7 +392,7 @@ def main():
 \t\t\t\tCLANG_ENABLE_MODULES = YES;
 \t\t\t\tCOPY_PHASE_STRIP = NO;
 \t\t\t\tDEBUG_INFORMATION_FORMAT = dwarf;
-\t\t\t\tDEVELOPMENT_TEAM = 5RN24MB5AH;
+\t\t\t\tDEVELOPMENT_TEAM = 9BLTG2R6JP;
 \t\t\t\tENABLE_STRICT_OBJC_MSGSEND = YES;
 \t\t\t\tENABLE_TESTABILITY = YES;
 \t\t\t\tGCC_DYNAMIC_NO_PIC = NO;
@@ -279,10 +436,11 @@ def main():
 \t\t\tbuildSettings = {{
 \t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 \t\t\t\tASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+\t\t\t\tCODE_SIGN_ENTITLEMENTS = Sources/NativeHAApp/Haven.entitlements;
 \t\t\t\tCODE_SIGN_STYLE = Automatic;
-\t\t\t\tCURRENT_PROJECT_VERSION = 3;
+\t\t\t\tCURRENT_PROJECT_VERSION = 4;
 \t\t\t\tDEVELOPMENT_ASSET_PATHS = "";
-\t\t\t\tDEVELOPMENT_TEAM = 5RN24MB5AH;
+\t\t\t\tDEVELOPMENT_TEAM = 9BLTG2R6JP;
 \t\t\t\tENABLE_PREVIEWS = YES;
 \t\t\t\tGENERATE_INFOPLIST_FILE = NO;
 \t\t\t\tINFOPLIST_FILE = Sources/NativeHAApp/Info.plist;
@@ -291,7 +449,7 @@ def main():
 \t\t\t\t\t"$(inherited)",
 \t\t\t\t\t"@executable_path/Frameworks",
 \t\t\t\t);
-\t\t\t\tMARKETING_VERSION = 1.0.2;
+\t\t\t\tMARKETING_VERSION = 1.1.0;
 \t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven;
 \t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";
 \t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;
@@ -305,10 +463,11 @@ def main():
 \t\t\tbuildSettings = {{
 \t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 \t\t\t\tASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+\t\t\t\tCODE_SIGN_ENTITLEMENTS = Sources/NativeHAApp/Haven.entitlements;
 \t\t\t\tCODE_SIGN_STYLE = Automatic;
-\t\t\t\tCURRENT_PROJECT_VERSION = 3;
+\t\t\t\tCURRENT_PROJECT_VERSION = 4;
 \t\t\t\tDEVELOPMENT_ASSET_PATHS = "";
-\t\t\t\tDEVELOPMENT_TEAM = 5RN24MB5AH;
+\t\t\t\tDEVELOPMENT_TEAM = 9BLTG2R6JP;
 \t\t\t\tENABLE_PREVIEWS = YES;
 \t\t\t\tGENERATE_INFOPLIST_FILE = NO;
 \t\t\t\tINFOPLIST_FILE = Sources/NativeHAApp/Info.plist;
@@ -317,9 +476,61 @@ def main():
 \t\t\t\t\t"$(inherited)",
 \t\t\t\t\t"@executable_path/Frameworks",
 \t\t\t\t);
-\t\t\t\tMARKETING_VERSION = 1.0.2;
+\t\t\t\tMARKETING_VERSION = 1.1.0;
 \t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven;
 \t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";
+\t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;
+\t\t\t\tSWIFT_VERSION = 5.0;
+\t\t\t\tTARGETED_DEVICE_FAMILY = "1,2";
+\t\t\t}};
+\t\t\tname = Release;
+\t\t}};
+\t\t{widget_debug_config_id} /* Debug */ = {{
+\t\t\tisa = XCBuildConfiguration;
+\t\t\tbuildSettings = {{
+\t\t\t\tAPPLICATION_EXTENSION_API_ONLY = YES;
+\t\t\t\tCODE_SIGN_ENTITLEMENTS = Sources/HavenWidgets/HavenWidgets.entitlements;
+\t\t\t\tCODE_SIGN_STYLE = Automatic;
+\t\t\t\tCURRENT_PROJECT_VERSION = 4;
+\t\t\t\tDEVELOPMENT_TEAM = 9BLTG2R6JP;
+\t\t\t\tGENERATE_INFOPLIST_FILE = NO;
+\t\t\t\tINFOPLIST_FILE = Sources/HavenWidgets/Info.plist;
+\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = 17.0;
+\t\t\t\tLD_RUNPATH_SEARCH_PATHS = (
+\t\t\t\t\t"$(inherited)",
+\t\t\t\t\t"@executable_path/Frameworks",
+\t\t\t\t\t"@executable_path/../../Frameworks",
+\t\t\t\t);
+\t\t\t\tMARKETING_VERSION = 1.1.0;
+\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven.widgets;
+\t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";
+\t\t\t\tSKIP_INSTALL = YES;
+\t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;
+\t\t\t\tSWIFT_VERSION = 5.0;
+\t\t\t\tTARGETED_DEVICE_FAMILY = "1,2";
+\t\t\t}};
+\t\t\tname = Debug;
+\t\t}};
+\t\t{widget_release_config_id} /* Release */ = {{
+\t\t\tisa = XCBuildConfiguration;
+\t\t\tbuildSettings = {{
+\t\t\t\tAPPLICATION_EXTENSION_API_ONLY = YES;
+\t\t\t\tCODE_SIGN_ENTITLEMENTS = Sources/HavenWidgets/HavenWidgets.entitlements;
+\t\t\t\tCODE_SIGN_STYLE = Automatic;
+\t\t\t\tCURRENT_PROJECT_VERSION = 4;
+\t\t\t\tDEVELOPMENT_TEAM = 9BLTG2R6JP;
+\t\t\t\tGENERATE_INFOPLIST_FILE = NO;
+\t\t\t\tINFOPLIST_FILE = Sources/HavenWidgets/Info.plist;
+\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = 17.0;
+\t\t\t\tLD_RUNPATH_SEARCH_PATHS = (
+\t\t\t\t\t"$(inherited)",
+\t\t\t\t\t"@executable_path/Frameworks",
+\t\t\t\t\t"@executable_path/../../Frameworks",
+\t\t\t\t);
+\t\t\t\tMARKETING_VERSION = 1.1.0;
+\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = org.bilien.haven.widgets;
+\t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";
+\t\t\t\tSKIP_INSTALL = YES;
 \t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;
 \t\t\t\tSWIFT_VERSION = 5.0;
 \t\t\t\tTARGETED_DEVICE_FAMILY = "1,2";
@@ -347,6 +558,15 @@ def main():
 \t\t\tdefaultConfigurationIsVisible = 0;
 \t\t\tdefaultConfigurationName = Release;
 \t\t}};
+\t\t{widget_config_list_id} /* Build configuration list for PBXNativeTarget "HavenWidgets" */ = {{
+\t\t\tisa = XCConfigurationList;
+\t\t\tbuildConfigurations = (
+\t\t\t\t{widget_debug_config_id} /* Debug */,
+\t\t\t\t{widget_release_config_id} /* Release */,
+\t\t\t);
+\t\t\tdefaultConfigurationIsVisible = 0;
+\t\t\tdefaultConfigurationName = Release;
+\t\t}};
 /* End XCConfigurationList section */
 
 \t}};
@@ -365,6 +585,20 @@ def main():
       buildImplicitDependencies = "YES"
       buildArchitectures = "Automatic">
       <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "{widget_target_id}"
+               BuildableName = "HavenWidgets.appex"
+               BlueprintName = "HavenWidgets"
+               ReferencedContainer = "container:NativeHA.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
          <BuildActionEntry
             buildForTesting = "YES"
             buildForRunning = "YES"
@@ -438,7 +672,7 @@ def main():
     with open(os.path.join(schemes_dir, 'Haven.xcscheme'), 'w') as f:
         f.write(scheme_content)
 
-    print("==> Generated NativeHA.xcodeproj with Haven scheme, AppIcon, PrivacyInfo, and Team signing!")
+    print("==> Generated NativeHA.xcodeproj with Haven + HavenWidgets extension, App Group entitlements, and Team signing!")
 
 if __name__ == '__main__':
     main()

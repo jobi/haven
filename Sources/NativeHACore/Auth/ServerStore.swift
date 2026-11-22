@@ -4,7 +4,7 @@ import Observation
 /// Manages multiple configured Home Assistant servers with persistence and active server tracking.
 @Observable
 public final class ServerStore: @unchecked Sendable {
-    public static let shared = ServerStore()
+    public static let shared = ServerStore(userDefaults: SharedAppGroup.userDefaults)
     
     public private(set) var servers: [ServerConfig] = []
     public private(set) var activeServerId: String? = nil
@@ -102,6 +102,24 @@ public final class ServerStore: @unchecked Sendable {
             self.activeServerId = legacyServer.id
             saveToStorage()
             return
+        }
+        
+        // 3. Migrate from UserDefaults.standard into SharedAppGroup container if upgrading
+        if userDefaults !== UserDefaults.standard {
+            if let stdData = UserDefaults.standard.data(forKey: userDefaultsListKey),
+               let stdLoaded = try? JSONDecoder().decode([ServerConfig].self, from: stdData) {
+                self.servers = stdLoaded
+                self.activeServerId = UserDefaults.standard.string(forKey: userDefaultsActiveKey) ?? stdLoaded.first?.id
+                saveToStorage()
+                return
+            }
+            if let stdLegacy = UserDefaults.standard.data(forKey: legacyServerKey),
+               let legacyServer = try? JSONDecoder().decode(ServerConfig.self, from: stdLegacy) {
+                self.servers = [legacyServer]
+                self.activeServerId = legacyServer.id
+                saveToStorage()
+                return
+            }
         }
     }
     

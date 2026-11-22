@@ -15,6 +15,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "E44F2C230B5636F2DE5A89B1"
+               BuildableName = "HavenWidgets.appex"
+               BlueprintName = "HavenWidgets"
+               ReferencedContainer = "container:NativeHA.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "DDE2399EEBC5CF4F0BFD2C5E"
                BuildableName = "Haven.app"
                BlueprintName = "Haven"

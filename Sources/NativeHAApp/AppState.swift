@@ -18,6 +18,7 @@ public final class AppState {
     
     public var isShowingSettings: Bool = false
     public var isShowingAddServerSheet: Bool = false
+    public var isShowingWidgetsPreview: Bool = false
     public var presentedMoreInfoEntityId: String? = nil
     
     public init(serverStore: ServerStore = .shared) {
@@ -30,6 +31,7 @@ public final class AppState {
         if let server = serverStore.activeServer {
             self.isConfigured = true
             self.entityStore.serverURL = server.url
+            self.entityStore.serverId = server.id
             self.dashboardRepository.serverId = server.id
             if server.isDemo {
                 self.entityStore.loadDemoData()
@@ -60,6 +62,9 @@ public final class AppState {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                 self.isShowingSettings = true
             }
+        }
+        if args.contains("-widgets_preview") {
+            self.isShowingWidgetsPreview = true
         }
     }
     
@@ -100,6 +105,7 @@ public final class AppState {
         
         // Reset stores for clean state
         self.entityStore.serverURL = server.url
+        self.entityStore.serverId = server.id
         self.dashboardRepository.serverId = server.id
         
         if server.isDemo {
@@ -134,6 +140,7 @@ public final class AppState {
     }
     
     public func handleDidEnterBackground() {
+        entityStore.syncWidgetSnapshots(force: true)
         guard isConfigured, activeServer?.isDemo != true else { return }
         Task {
             await wsClient.pauseForBackground()
@@ -207,6 +214,7 @@ public final class AppState {
             }
             
             serverStore.removeServer(id: id)
+            SharedAppGroup.removeEntitySnapshots(forServerId: id)
             syncQuickActions()
             
             if serverStore.activeServer != nil {
@@ -249,8 +257,13 @@ public final class AppState {
         let host = url.host ?? ""
         
         if host == "demo" || url.scheme == "haven" {
-            if activeServer?.isDemo != true {
+            if host == "demo" && activeServer?.isDemo != true {
                 enableDemoMode()
+            } else if let serverId = queryItems.first(where: { $0.name == "server_id" })?.value,
+                      !serverId.isEmpty,
+                      serverStore.servers.contains(where: { $0.id == serverId }),
+                      serverStore.activeServerId != serverId {
+                switchToServer(id: serverId)
             }
             
             // Check view selection: ?view=home / ?view=security / ?view=energy

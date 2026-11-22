@@ -60,6 +60,12 @@ xcrun simctl launch "$IPAD_DEVICE_ID" org.bilien.haven -demo -view home -setting
 sleep 3
 xcrun simctl io "$IPAD_DEVICE_ID" screenshot "$OUT_DIR/06_ipad_multi_server_settings.png"
 
+echo "==> 10. Capturing Screenshot 7: Interactive Home Widgets..."
+xcrun simctl terminate "$IPAD_DEVICE_ID" org.bilien.haven >/dev/null 2>&1 || true
+xcrun simctl launch "$IPAD_DEVICE_ID" org.bilien.haven -demo -widgets_preview
+sleep 2
+xcrun simctl io "$IPAD_DEVICE_ID" screenshot "$OUT_DIR/07_ipad_widgets.png"
+
 echo "==> Resetting to Home view..."
 xcrun simctl terminate "$IPAD_DEVICE_ID" org.bilien.haven >/dev/null 2>&1 || true
 xcrun simctl launch "$IPAD_DEVICE_ID" org.bilien.haven -demo -view home

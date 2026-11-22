@@ -113,10 +113,85 @@ public struct HARestClient: Sendable {
         )
     }
     
+    // MARK: - Entity State & Service Calls (used by Widgets & AppIntents)
+    
+    /// Fetches the current state of a single entity via `GET /api/states/<entity_id>`
+    public func fetchEntityState(
+        serverURL: URL,
+        token: String,
+        entityId: String
+    ) async throws -> HAEntityState {
+        let url = serverURL.appendingPathComponent("api/states/\(entityId)")
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 8.0
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            let errorText = String(data: data, encoding: .utf8) ?? "HTTP error"
+            throw NetworkError.requestFailed(message: errorText)
+        }
+        
+        let raw = try JSONDecoder().decode(RESTEntityState.self, from: data)
+        return raw.toEntityState()
+    }
+    
+    /// Fetches all entity states via `GET /api/states`
+    public func fetchAllStates(
+        serverURL: URL,
+        token: String
+    ) async throws -> [HAEntityState] {
+        let url = serverURL.appendingPathComponent("api/states")
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 10.0
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            let errorText = String(data: data, encoding: .utf8) ?? "HTTP error"
+            throw NetworkError.requestFailed(message: errorText)
+        }
+        
+        let rawList = try JSONDecoder().decode([RESTEntityState].self, from: data)
+        return rawList.map { $0.toEntityState() }
+    }
+    
+    /// Invokes a Home Assistant service via `POST /api/services/<domain>/<service>`
+    public func callService(
+        serverURL: URL,
+        token: String,
+        domain: String,
+        service: String,
+        entityId: String,
+        serviceData: [String: AnyCodable]? = nil
+    ) async throws {
+        let url = serverURL.appendingPathComponent("api/services/\(domain)/\(service)")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 8.0
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        var payload: [String: AnyCodable] = serviceData ?? [:]
+        payload["entity_id"] = AnyCodable(entityId)
+        request.httpBody = try JSONEncoder().encode(payload)
+        
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            let errorText = String(data: data, encoding: .utf8) ?? "HTTP error"
+            throw NetworkError.requestFailed(message: errorText)
+        }
+    }
+    
     public enum NetworkError: Error, LocalizedError {
         case unreachable
         case tokenExchangeFailed(message: String)
         case tokenRefreshFailed(message: String)
+        case requestFailed(message: String)
         
         public var errorDescription: String? {
             switch self {
@@ -126,8 +201,45 @@ public struct HARestClient: Sendable {
                 return "Failed to exchange authorization code: \(msg)"
             case .tokenRefreshFailed(let msg):
                 return "Failed to refresh access token: \(msg)"
+            case .requestFailed(let msg):
+                return "Home Assistant request failed: \(msg)"
             }
         }
+    }
+}
+
+private struct RESTEntityState: Decodable {
+    let entityId: String
+    let state: String
+    let attributes: [String: AnyCodable]?
+    let lastChanged: String?
+    let lastUpdated: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case entityId = "entity_id"
+        case state
+        case attributes
+        case lastChanged = "last_changed"
+        case lastUpdated = "last_updated"
+    }
+    
+    func toEntityState() -> HAEntityState {
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let fallbackIso = ISO8601DateFormatter()
+        
+        func parseDate(_ str: String?) -> Date? {
+            guard let str else { return nil }
+            return iso.date(from: str) ?? fallbackIso.date(from: str)
+        }
+        
+        return HAEntityState(
+            entityId: entityId,
+            state: state,
+            attributes: attributes ?? [:],
+            lastChanged: parseDate(lastChanged),
+            lastUpdated: parseDate(lastUpdated)
+        )
     }
 }
 

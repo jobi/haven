@@ -1,6 +1,9 @@
 import Foundation
 import Observation
 import OSLog
+#if canImport(WidgetKit)
+import WidgetKit
+#endif
 
 @Observable
 @MainActor
@@ -8,8 +11,10 @@ public final class EntityStore {
     public private(set) var entities: [String: HAEntityState] = [:]
     public var lastUpdated: Date = Date()
     public var isDemoMode: Bool = false
+    public var serverId: String? = nil
     
     private weak var wsClient: HAWebSocketClient?
+    private var lastWidgetSyncDate: Date = .distantPast
     
     public init(wsClient: HAWebSocketClient? = nil) {
         self.wsClient = wsClient
@@ -23,6 +28,28 @@ public final class EntityStore {
         self.isDemoMode = true
         self.entities = DemoDataProvider.shared.generateDemoEntities()
         self.lastUpdated = Date()
+        syncWidgetSnapshots(force: true)
+    }
+    
+    public func syncWidgetSnapshots(force: Bool = false) {
+        let now = Date()
+        guard force || now.timeIntervalSince(lastWidgetSyncDate) >= 5.0 else { return }
+        lastWidgetSyncDate = now
+        
+        let targetServerId = serverId ?? (isDemoMode ? ServerConfig.demoServer.id : nil)
+        let snapshots = entities.values
+            .filter { WidgetDataService.isWidgetRelevantDomain($0.domain) }
+            .map { WidgetEntitySnapshot(from: $0, serverId: targetServerId) }
+        
+        if let targetServerId {
+            SharedAppGroup.saveEntitySnapshots(snapshots, forServerId: targetServerId)
+        } else {
+            SharedAppGroup.saveEntitySnapshots(snapshots)
+        }
+        
+        #if canImport(WidgetKit)
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
     }
     
     public func entity(for entityId: String) -> HAEntityState? {
@@ -43,6 +70,7 @@ public final class EntityStore {
             }
             self.entities = newMap
             self.lastUpdated = Date()
+            syncWidgetSnapshots(force: true)
             return
         }
         
@@ -52,6 +80,7 @@ public final class EntityStore {
                 applyDelta(entityId: entityId, delta: deltaValue)
             }
             self.lastUpdated = Date()
+            syncWidgetSnapshots(force: false)
             return
         }
         

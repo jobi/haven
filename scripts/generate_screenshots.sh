@@ -55,6 +55,12 @@ xcrun simctl launch booted org.bilien.haven -demo -view home -settings
 sleep 3
 xcrun simctl io booted screenshot "$OUT_DIR/06_multi_server_settings.png"
 
+echo "==> 8. Capturing Screenshot 7: Interactive Home Widgets..."
+xcrun simctl terminate booted org.bilien.haven >/dev/null 2>&1 || true
+xcrun simctl launch booted org.bilien.haven -demo -widgets_preview
+sleep 2
+xcrun simctl io booted screenshot "$OUT_DIR/07_widgets.png"
+
 echo "==> Resetting to Home view..."
 xcrun simctl terminate booted org.bilien.haven >/dev/null 2>&1 || true
 xcrun simctl launch booted org.bilien.haven -demo -view home

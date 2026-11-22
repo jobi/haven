@@ -52,7 +52,9 @@ struct NativeHAApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if appState.isConfigured {
+                if appState.isShowingWidgetsPreview {
+                    WidgetShowcaseView()
+                } else if appState.isConfigured {
                     DashboardHostView(
                         repository: appState.dashboardRepository,
                         entityStore: appState.entityStore,

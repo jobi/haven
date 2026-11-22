@@ -32,7 +32,7 @@ let package = Package(
             name: "NativeHAApp",
             dependencies: ["NativeHACore"],
             path: "Sources/NativeHAApp",
-            exclude: ["Info.plist", "PrivacyInfo.xcprivacy"],
+            exclude: ["Info.plist", "PrivacyInfo.xcprivacy", "Haven.entitlements"],
             resources: [
                 .process("Assets.xcassets")
             ]
